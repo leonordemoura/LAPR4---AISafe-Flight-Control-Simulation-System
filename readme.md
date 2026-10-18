@@ -1,4 +1,30 @@
-# Project AIControl
+<div align="center">
+
+  <!-- Typing Effect Banner / Header -->
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=1000&color=A6E3A1&center=true&vCenter=true&width=650&lines=%E2%9C%88%EF%B8%8F+Project+AIControl+%7C+AISafe;Air+Traffic+Management+%26+Flight+Simulation;Built+with+Java+21%2C+DDD+%26+Scrum;Scalable%2C+Secure+%26+Automated+Systems" alt="Typing SVG" />
+  </a>
+
+  <br />
+
+  <!-- Animated Flight / Airplane GIF -->
+  <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Y5Y2ZicnkycmZnbnd0dDFpMmg5MHoweTN5bnhvbmZhZjMxcGpmdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKSx0OTIalS5fMI/giphy.gif" width="200px" alt="Airplane Animation GIF" />
+
+  <h1>✈️ Project AIControl</h1>
+
+  <p><i>Scalable & Integrated Air Traffic Management Support System for AISafe</i></p>
+
+  <!-- Badges in Green/Mint Theme -->
+  <img src="https://img.shields.io/badge/Java-21-a6e3a1?style=for-the-badge&logo=openjdk&logoColor=1e1e2e" />
+  <img src="https://img.shields.io/badge/Build-Maven%203.9-94e2d5?style=for-the-badge&logo=apachemaven&logoColor=1e1e2e" />
+  <img src="https://img.shields.io/badge/Architecture-DDD-a6e3a1?style=for-the-badge&logoColor=1e1e2e" />
+  <img src="https://img.shields.io/badge/Methodology-Scrum-89dceb?style=for-the-badge&logoColor=1e1e2e" />
+
+</div>
+
+<br />
+
+---
 
 ## 1. Description of the Project
 
