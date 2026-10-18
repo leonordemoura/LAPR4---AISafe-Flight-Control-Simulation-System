@@ -1,0 +1,14 @@
+package aiSafe.flight.application.validate;
+
+public enum ValidateFlightPlanErrorCode {
+    FLIGHT_NOT_FOUND,
+    AIRCRAFT_NOT_FOUND,
+    NO_DRAFT_PLAN,
+    PLAN_ALREADY_VALIDATED,
+    DEPARTURE_MISMATCH,
+    DSL_VALIDATION,
+    FLIGHT_ID_MISMATCH,
+    ROUTE_MISMATCH,
+    INSUFFICIENT_FUEL,
+    SIMULATION_FAILED
+}

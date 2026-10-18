@@ -1,0 +1,108 @@
+@startuml
+
+package "aisafe.core" {
+
+    class WeatherData <<entity>> <<root>> {
+    }
+
+    class AreaCode <<vo>> {
+        - value: String
+    }
+
+    class ObservationDate <<vo>> {
+        - startDateTime: LocalDateTime
+        - endDateTime: LocalDateTime
+    }
+
+    class WeatherSource <<vo>> {
+        - value: String
+    }
+
+    class WeatherSubArea <<vo>> {
+        - minLatitude: double
+        - maxLatitude: double
+        - minLongitude: double
+        - maxLongitude: double
+        - minAltitude: double
+        - maxAltitude: double
+        + contains(latitude: double, longitude: double, altitude: double): boolean
+        + isWithinControlArea(boundary: GeoBoundary, maxAlt: double): boolean
+    }
+
+    class WindDirection <<vo>> {
+        - degrees: double
+    }
+
+    class WindSpeed <<vo>> {
+        - value: double
+    }
+
+    class Temperature <<vo>> {
+        - value: double
+    }
+
+    class Pressure <<vo>> {
+        - value: double
+    }
+
+    enum WindSpeedUnit {
+        MPS
+        KMH
+        KT
+    }
+
+    enum TemperatureUnit {
+        C
+        F
+    }
+
+    enum PressureUnit {
+        HPA
+        PA
+    }
+
+    interface WeatherDataRepository <<interface>> {
+        + save(weatherData: WeatherData): WeatherData
+        + existsByAreaCodeAndObservationDateAndWeatherSource(\n  areaCode: AreaCode,\n  observationDate: ObservationDate,\n  source: WeatherSource): boolean
+    }
+
+    interface AirControlAreaRepository <<interface>> {
+        + existsByAreaCode(areaCode: AreaCode): boolean
+        + findByAreaCode(areaCode: AreaCode): Optional<AirControlArea>
+    }
+
+    class RegisterWeatherDataController {
+        - factory: RepositoryFactory
+        + checkAreaCodeExists(areaCode: String): boolean
+        + registerWeatherData(areaCode: String,\n  observationStartDate: LocalDateTime,\n  observationEndDate: LocalDateTime,\n  weatherSource: String,\n  minLat: double, maxLat: double,\n  minLon: double, maxLon: double,\n  minAlt: double, maxAlt: double,\n  windDirection: double,\n  windSpeed: double,\n  windSpeedUnit: WindSpeedUnit,\n  temperature: double,\n  temperatureUnit: TemperatureUnit,\n  pressure: double,\n  pressureUnit: PressureUnit): WeatherData
+    }
+
+    WeatherData "1" *-- "1" AreaCode
+    WeatherData "1" *-- "1" ObservationDate
+    WeatherData "1" *-- "1" WeatherSource
+    WeatherData "1" *-- "1" WeatherSubArea
+    WeatherData "1" *-- "1" WindDirection
+    WeatherData "1" *-- "1" WindSpeed
+    WindSpeed "1" *-- "1" WindSpeedUnit
+    WeatherData "1" *-- "1" Temperature
+    Temperature "1" *-- "1" TemperatureUnit
+    WeatherData "1" *-- "1" Pressure
+    Pressure "1" *-- "1" PressureUnit
+
+    RegisterWeatherDataController ..> WeatherData : creates
+    RegisterWeatherDataController ..> WeatherDataRepository : uses
+    WeatherDataRepository ..> WeatherData : persists
+    RegisterWeatherDataController ..> AirControlAreaRepository : uses
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class RegisterWeatherDataUI {
+        - controller: RegisterWeatherDataController
+        + doShow(): boolean
+    }
+
+    RegisterWeatherDataUI ..> RegisterWeatherDataController : uses
+}
+
+@enduml

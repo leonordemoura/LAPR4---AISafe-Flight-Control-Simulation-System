@@ -1,0 +1,74 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+title US091 - Remote Accesses Logging Visualization
+
+actor "Administrator" as ADMIN
+participant "Web Browser" as BROWSER <<client>>
+
+box "Remote Accesses Logging Server" #LightYellow
+    participant "HttpServer" as HTTP <<server>>
+    participant "HttpRouter" as ROUTER <<server>>
+    participant "EventController" as EVENT_CTRL <<server>>
+    participant "ActiveUsersController" as USERS_CTRL <<server>>
+    participant "LogService" as SERVICE <<application>>
+end box
+
+== Carregamento Inicial ==
+
+ADMIN -> BROWSER : open URL
+activate BROWSER
+
+BROWSER -> HTTP : GET /index.html
+activate HTTP
+HTTP -> ROUTER : route(request)
+ROUTER --> HTTP : HTML + JS
+HTTP --> BROWSER : 200 OK
+deactivate HTTP
+
+BROWSER -> BROWSER : render UI
+BROWSER -> BROWSER : start AJAX timer
+
+== AJAX LOOP ==
+
+loop every N seconds
+
+    BROWSER -> HTTP : GET /events
+    activate HTTP
+
+    HTTP -> ROUTER : route(/events)
+    ROUTER -> EVENT_CTRL : getLastEvents()
+    EVENT_CTRL -> SERVICE : getLastEvents()
+    SERVICE --> EVENT_CTRL : List<AccessEvent>
+
+    EVENT_CTRL --> ROUTER : DTO list
+    ROUTER --> HTTP : JSON response
+    HTTP --> BROWSER : 200 OK
+
+    deactivate HTTP
+
+    BROWSER -> BROWSER : update events table
+
+    BROWSER -> HTTP : GET /active-users
+    activate HTTP
+
+    HTTP -> ROUTER : route(/active-users)
+    ROUTER -> USERS_CTRL : getActiveUsers()
+    USERS_CTRL -> SERVICE : getActiveUsers()
+    SERVICE --> USERS_CTRL : List<String>
+
+    USERS_CTRL --> ROUTER : DTO list
+    ROUTER --> HTTP : JSON response
+    HTTP --> BROWSER : 200 OK
+
+    deactivate HTTP
+
+    BROWSER -> BROWSER : update active users table
+
+end
+
+deactivate BROWSER
+@enduml

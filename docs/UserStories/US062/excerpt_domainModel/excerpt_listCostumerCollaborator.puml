@@ -1,0 +1,166 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "AirTransportCompany Aggregate" {
+    class AirTransportCompany <<entity>> <<root>> {
+    }
+
+    class CompanyName <<vo>> {
+        value
+    }
+
+    class IataCode <<vo>> {
+        value
+    }
+
+    class IcaoCode <<vo>> {
+        value
+    }
+
+    class Membership <<vo>> {
+        userEmail
+        isValid
+    }
+
+    enum MemberType <<enum>> {
+        ATCC
+        PILOT
+        FCO
+    }
+
+    class Position <<vo>> {
+        position
+    }
+
+
+    AirTransportCompany "1" *-- "1" CompanyName
+    AirTransportCompany "1" *-- "1" IataCode
+    AirTransportCompany "1" *-- "1" IcaoCode
+    AirTransportCompany "1" *-- "0..*" Membership : has >
+    Membership "1" *-- "1" MemberType : typed as >
+    Membership "1" --> "1" Position : has >
+}
+
+package "AirControlArea Aggregate" {
+
+    class AirControlArea <<entity>> <<root>> {
+    }
+    class AreaCode <<vo>> {
+        value
+    }
+
+    class AreaName <<vo>> {
+        value
+    }
+
+    class MinFuelAtArrival <<vo>> {
+        value
+    }
+
+    class GeoBoundary <<vo>> {
+    }
+
+    class Coordinate <<vo>> {
+        latitude
+        longitude
+    }
+
+    class Membership <<vo>> {
+        userEmail
+        isValid
+    }
+
+    enum MemberType <<enum>> {
+            ATCC
+            PILOT
+            FCO
+    }
+
+    class Position <<vo>> {
+        position
+    }
+
+
+    AirControlArea "1" *-- "1" AreaName
+    Membership "1" *-- "1" MemberType : typed as >
+    AirControlArea "1" *-- "0..*" Membership : has >
+    AirControlArea "1" *-- "1" AreaCode
+    AirControlArea "1" *-- "1" MinFuelAtArrival
+    AirControlArea "1" *-- "1" GeoBoundary : bounded by >
+    GeoBoundary "1" *-- "4" Coordinate : defined by >
+    Membership "1" --> "1" Position : has >
+}
+
+package "User Aggregate" {
+
+    class User <<entity>> <<aggregateRoot>> {
+    }
+
+    class SystemUser <<framework entity>> {
+    }
+
+    class Role <<framework vo>> {
+        roleName
+    }
+
+    class AisafeRoles <<utility>> {
+        {static} ADMIN : Role
+        {static} BACKOFFICE_OPERATOR : Role
+        {static} AIR_TRANSPORT_COMPANY_COLLABORATOR : Role
+        {static} PILOT : Role
+        {static} FLIGHT_CONTROL_OPERATOR : Role
+        {static} WEATHER_PERSON : Role
+    }
+
+    class AisafeProfile <<entity>> {
+    }
+
+    class SecurityClearance <<vo>> {
+        expiryDate
+    }
+
+    class SkillsAssessment <<vo>> {
+        lastAssessmentDate
+    }
+
+    class Email <<vo>> {
+        emailAddress
+    }
+
+    class Email_Domains <<vo>> {
+        domain
+    }
+
+    class PhoneNumber <<vo>> {
+        code {**country code**}
+        number
+    }
+
+    class FullName <<vo>> {
+        firstName
+        lastName
+    }
+
+    User "1" *-- "1" Email : identifies >
+    User "1" *-- "1" FullName : has >
+    User "1" *-- "1" PhoneNumber : has >
+    User "1" *-- "0..1" AisafeProfile : has >
+
+    AisafeProfile "1" *-- "1" SecurityClearance
+    AisafeProfile "1" *-- "1" SkillsAssessment
+    Email "1" *-- "1" Email_Domains : belongs to >
+    SystemUser "1" --> "*" Role : assigned >
+    SystemUser "1" --> "1" Email : username/email >
+    User ..> SystemUser : linked by email/username
+    AisafeRoles ..> Role
+
+}
+
+AirTransportCompany "1" ..> User : has collaborators >
+AirControlArea "1" ..> User : has collaborators >
+
+
+@enduml

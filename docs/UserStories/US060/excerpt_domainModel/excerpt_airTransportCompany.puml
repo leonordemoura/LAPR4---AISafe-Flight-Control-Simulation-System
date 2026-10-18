@@ -1,0 +1,47 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "AirTransportCompany Aggregate" {
+    class AirTransportCompany <<entity>> <<root>> {
+    }
+
+    class CompanyName <<vo>> {
+        value
+    }
+
+    class IataCode <<vo>> {
+        value
+    }
+
+    class IcaoCode <<vo>> {
+        value
+    }
+
+    class CompanyMembership <<vo>> {
+        'ligação com User
+        userID
+        validUntil
+    }
+
+    enum MemberType <<enum>> {
+        ATCC
+        PILOT
+    }
+
+    class UserId <<vo>> {
+        value
+    }
+
+    ' Relacionamentos AirTransportCompany
+    AirTransportCompany "1" *-- "1" CompanyName
+    AirTransportCompany "1" *-- "1" IataCode
+    AirTransportCompany "1" *-- "1" IcaoCode
+    AirTransportCompany "1" *-- "0..*" CompanyMembership : has >
+    CompanyMembership "1" *-- "1" MemberType : typed as >
+    CompanyMembership "1" *-- "1" UserId : ref userID
+}
+
+@enduml

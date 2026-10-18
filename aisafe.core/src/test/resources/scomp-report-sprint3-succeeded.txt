@@ -1,0 +1,19 @@
+========= SIMULATION REPORT =========
+Total Flights: 1
+Total Violations: 0
+Violation Threshold: 3
+
+-----------------------------------
+
+FLIGHT HISTORIES:
+  Flight 123 (Total Positions: 3, Violations: 0, Performance Score: 100.00%):
+    Pos: (41.242, 10.0) Alt: 100.0 Vel: (1.0, 2.0, 3.0)
+    Pos: (42.0, 20.0) Alt: 200.0 Vel: (4.0, 5.0, 6.0)
+    Pos: (43.0, 30.0) Alt: 300.0 Vel: (7.0, 8.0, 9.0)
+
+-----------------------------------
+
+VERDICT:
+SIMULATION SUCCEEDED
+
+========= END OF REPORT =========

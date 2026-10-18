@@ -1,0 +1,142 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "RegisterEngineModelUI" as UI <<presentation>>
+participant "RegisterEngineModelController" as Controller <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "EngineModelRepository" as Repo <<repository>>
+database "MakerRepository" as MakerRepo <<repository>>
+database "FuelTypeRepository" as FuelTypeRepo <<repository>>
+participant "EngineModel\n<<Aggregate Root>>" as EngineModel <<domain>>
+
+activate User
+
+    User -> UI : requests to create an engine model
+    activate UI
+
+        UI --> User : asks for engine model name
+        User --> UI : provides engine model name(name)
+        UI --> User : asks for the manufacturer ID
+        User --> UI : provides manufacturer(makerID)
+        UI --> User : presents list of motorization types
+        User --> UI : selects motorization type(motorizationType)
+        UI --> User : asks for the fuel type
+        User --> UI : selects fuel type(fuelTypeName)
+        UI --> User : asks for engine power
+        User --> UI : provides engine power(power, unit)
+        UI --> User : asks for engine TSFC
+        User --> UI : provides engine TSFC(tsfc)
+
+        UI -> Controller : registerEngineModel(modelName, power, tsfc, fuelType, engineType, makerID)
+        activate Controller
+
+            Controller -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+
+                    activate RepoFac
+                        RepoFac --> AS : repositoryFactory
+                    deactivate RepoFac
+
+                    AS --> PC : repositoryFactory
+                deactivate AS
+
+            PC --> Controller : repositoryFactory
+            deactivate PC
+
+            Controller -> RepoFac: getMakerRepository()
+            activate RepoFac
+                RepoFac -> MakerRepo : create()
+
+                activate MakerRepo
+                    MakerRepo --> RepoFac : makerRepository
+                deactivate MakerRepo
+
+                RepoFac --> Controller : makerRepository
+            deactivate RepoFac
+
+            Controller -> MakerRepo : findById(makerID)
+            activate MakerRepo
+                MakerRepo --> Controller : maker
+            deactivate MakerRepo
+
+
+            Controller -> RepoFac: getFuelTypeRepository()
+            activate RepoFac
+                RepoFac -> FuelTypeRepo : create()
+
+                activate FuelTypeRepo
+                    FuelTypeRepo --> RepoFac : fuelTypeRepository
+                deactivate FuelTypeRepo
+
+                RepoFac --> Controller : fuelTypeRepository
+            deactivate RepoFac
+
+            Controller -> FuelTypeRepo : findByFuelType(fuelTypeName)
+            note right of FuelTypeRepo: **Rule**\n- name must be unique
+            activate FuelTypeRepo
+                FuelTypeRepo --> Controller : fuelType
+            deactivate FuelTypeRepo
+
+
+            Controller -> RepoFac: getEngineModelRepository()
+            activate RepoFac
+                RepoFac -> Repo : create()
+
+                activate Repo
+                    Repo --> RepoFac : engineModelRepository
+                deactivate Repo
+
+                RepoFac --> Controller : engineModelRepository
+            deactivate RepoFac
+
+            Controller -> Repo : findByModelNameAndMaker(modelName, maker)
+            note right of Repo: **Rule**\n- name and manufacturer combination must be unique
+            activate Repo
+                Repo --> Controller : null
+            deactivate Repo
+
+
+
+            Controller -> EngineModel : create(modelName, power, tsfc, fuelType, engineType, maker)
+            Note right of EngineModel: **Enforced Invariants**\n- name is not empty\n- manufacturer is not empty\n- tsfc is a positive number\n- power is a positive number
+            activate EngineModel
+                EngineModel --> Controller : engineModel
+            deactivate EngineModel
+
+
+            alt combination is unique
+                Controller -> Repo : save(engineModel)
+                activate Repo
+                    Repo --> Controller : success
+                deactivate Repo
+            else combination is not unique
+                Controller -> Repo : save(engineModel)
+                activate Repo
+                    Repo --> Controller : error
+                deactivate Repo
+            end
+            note right of Repo: **Enforced Invariant**\n- name and manufacturer combination is unique
+
+
+            Controller --> UI : output message
+
+        deactivate Controller
+
+        UI --> User : displays message
+    deactivate UI
+
+deactivate User
+
+@enduml

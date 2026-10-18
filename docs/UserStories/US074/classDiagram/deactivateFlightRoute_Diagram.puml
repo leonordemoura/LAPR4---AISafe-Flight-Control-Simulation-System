@@ -1,0 +1,126 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "backoffice" {
+    package "app"{
+        package "console" {
+            class DeactivateFlightRouteUI <<presentation>>{
+                - controller: DeactivateFlightRouteController
+                + doShow(): boolean
+            }
+        }
+    }
+}
+
+package "core"{
+    class DeactivateFlightRouteController <<controller>>{
+        - service : DeactivateFlightRouteService
+        + deactivateFlightRoute(dto: FlightRouteDTO, deactivationDate: LocalDateTime) : void
+        + getActiveRoutes() : Iterable<FlightRoute>
+    }
+
+    class DeactivateFlightRouteService <<service>>{
+        - flightRouteRepository : FlightRouteRepository
+        - flightRepository : FlightRepository
+        + deactivateFlightRoute(dto: FlightRouteDTO, deactivationDate: LocalDateTime) : void
+        + getActiveRoutes() : Iterable<FlightRoute>
+        - divideRouteName() : int
+        - validateDeactivationDate(): void
+    }
+
+    class FlightRouteDTO <<dto>>{
+        + routeName : String
+        + originIataCode : String
+        + destinationIataCode : String
+    }
+
+    class FlightRoute <<entity>> <<aggregateRoot>>
+
+    class RouteName <<vo>>{
+        - companyIata: String
+        - number : int
+    }
+
+    class RouteDesignator <<vo>>{
+        - origin: String
+        - destination: String
+    }
+
+    class Flight <<entity>> <<aggregateRoot>>
+
+    class FlightDesignator <<vo>>{
+        - airlineCode: String
+        - flightNumber: int
+        - operationalSuffix: String
+    }
+
+    enum FlightType <<enum>>{
+            REGULAR
+            CHARTER
+    }
+
+    class FlightPlan <<entity>>
+
+    class FuelQuantity <<vo>>{
+        - value: double
+        - unit: String
+    }
+
+    class DepartureDatetime <<vo>>{
+        - dateTime: LocalDateTime
+    }
+
+    class AircraftRegistration <<vo>>{
+        - registration: String
+    }
+
+    class PilotEmail <<vo>>{
+        - email: Email
+    }
+
+    enum FlightPlanStatus <<enum>>{
+        DRAFT
+        VALIDATED
+        ACTIVE
+        CANCELLED
+    }
+
+    class DslSource <<vo>>{
+        - content: String
+    }
+
+    interface FlightRouteRepository <<repository>>
+    interface FlightRepository <<repository>>
+
+    ' ── Domain relationships ──────────────────────────
+    FlightRoute "1" *-- "1" RouteName               : named >
+    FlightRoute "1" *-- "1" RouteDesignator         : defines >
+
+    Flight "0..*" --> "1" FlightRoute               : belongs to  >
+    Flight "1" *-- "1" FlightDesignator               : identified by >
+    Flight "1" --> "1" FlightType                     : typed as >
+    Flight "1" *-- "0..*" FlightPlan                     : has >
+
+    FlightPlan "1" --> "1" AircraftRegistration       : uses >
+    FlightPlan "1" *-- "1" DepartureDatetime             : departs at >
+    FlightPlan "1" --> "1" PilotEmail                     : assigned to >
+    FlightPlan "1" --> "1" FlightPlanStatus              : current status >
+    FlightPlan "1" *-- "1" FuelQuantity                     : requires >
+    FlightPlan "1" *-- "1" DslSource                     : defined by >
+
+
+    ' ── Repository relationships ─────────────────────
+    FlightRouteRepository ..> FlightRoute           : persists >
+    FlightRepository ..> Flight                     : persists >
+
+    ' ── Architecture relationships ───────────────────
+    DeactivateFlightRouteUI ..> DeactivateFlightRouteController         : uses >
+    DeactivateFlightRouteUI ..> FlightRouteDTO                        : creates >
+    DeactivateFlightRouteController ..> DeactivateFlightRouteService    : uses >
+    DeactivateFlightRouteController ..> FlightRouteDTO                : uses >
+    DeactivateFlightRouteService ..> FlightRoute                      : creates >
+    DeactivateFlightRouteService ..> FlightRouteRepository            : uses >
+    DeactivateFlightRouteService ..> FlightRepository                   : uses >
+    DeactivateFlightRouteService ..> FlightRouteDTO                   : uses >
+}
+@enduml

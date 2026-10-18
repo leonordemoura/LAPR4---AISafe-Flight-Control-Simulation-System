@@ -1,0 +1,25 @@
+========= SIMULATION REPORT =========
+Total Flights: 1
+Total Violations: 0
+Violation Threshold: 100
+
+-----------------------------------
+
+FLIGHT HISTORIES:
+
+Flight 1:
+ Time: 09:00 Position: (0.00, 0.00), Altitude: 1000.00
+ Time: 09:01 Position: (0.07, 0.07), Altitude: 1000.00
+
+-----------------------------------
+
+FLIGHT STATUS:
+
+Flight 1:
+  No violations detected.
+  Performance: 100.00
+
+Simulation completed successfully without reaching the violation threshold.
+SIMULATION SUCCEEDED :)
+
+========= END OF REPORT =========

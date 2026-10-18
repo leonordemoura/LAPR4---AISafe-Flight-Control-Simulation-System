@@ -1,0 +1,43 @@
+flight TP123 {
+    type REGULAR
+
+    leg {
+        departure OPO 2026-05-27 08:00
+        arrival MAD 2026-05-27 09:00
+
+        route {
+            origin OPO
+            destination MAD
+        }
+
+        segment {
+            start (41.242, -8.678)
+            end (38.774, -9.134)
+            altitude 12000 m
+            width 10 km
+            wind 180 deg 15 kt
+        }
+
+        fuel 5000 kg
+    }
+
+    leg {
+        departure MAD 2026-05-27 10:00
+        arrival LIS 2026-05-27 11:00
+
+        route {
+            origin MAD
+            destination LIS
+        }
+
+        segment {
+            start (38.774, -9.134)
+            end (40.483, -3.567)
+            altitude 11000 m
+            width 10 km
+            wind 270 deg 10 kt
+        }
+
+        fuel 3000 kg
+    }
+}

@@ -1,0 +1,136 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "WeatherData Aggregate" {
+
+    class WeatherData <<entity>> <<root>> {
+    }
+
+    class AreaCode <<vo>> {
+        value
+    }
+
+    class ObservationDate <<vo>> {
+        startDateTime
+        endDateTime
+    }
+
+    class WeatherSource <<vo>> {
+        value
+    }
+
+    class WindDirection <<vo>> {
+        degrees
+    }
+
+    class WindSpeed <<vo>> {
+        value
+    }
+
+    class Temperature <<vo>> {
+        value
+    }
+
+    class Pressure <<vo>> {
+        value
+    }
+
+    class WeatherSubArea <<vo>> {
+        minLatitude
+        maxLatitude
+        minLongitude
+        maxLongitude
+        minAltitude
+        maxAltitude
+    }
+
+    enum WindSpeedUnit {
+        MPS
+        KMH
+        KT
+    }
+
+    enum TemperatureUnit {
+        C
+        F
+    }
+
+    enum PressureUnit {
+        HPA
+        PA
+    }
+
+    WeatherData "1" *-- "1" AreaCode : belongs to
+    WeatherData "1" *-- "1" ObservationDate
+    WeatherData "1" *-- "1" WeatherSource
+    WeatherData "1" *-- "1" WeatherSubArea : applies to >
+    WeatherData "1" *-- "1" WindDirection
+    WeatherData "1" *-- "1" WindSpeed
+    WeatherData "1" *-- "1" Temperature
+    WeatherData "1" *-- "1" Pressure
+    WindSpeed "1" --> "1" WindSpeedUnit : has unit >
+    Temperature "1" --> "1" TemperatureUnit : has unit >
+    Pressure "1" --> "1" PressureUnit : has unit >
+}
+
+
+package "Flight Aggregate" {
+    class Flight <<entity>> <<aggregateRoot>> {
+    }
+
+    class FlightDesignator <<vo>> {
+        airlineCode
+        flightNumber
+        operationalSuffix
+    }
+
+    class FlightPlan <<entity>> {
+        submittedAt
+        rejectionReason
+    }
+
+    class FuelQuantity <<vo>> {
+        value
+        unit
+    }
+
+    class DepartureDatetime <<vo>> {
+        dateTime
+    }
+
+    class AircraftRegistration <<vo>> {
+        value
+    }
+
+    class PilotID <<vo>> {
+        value
+    }
+
+    enum FlightType <<enum>> {
+        REGULAR
+        CHARTER
+    }
+
+    enum FlightPlanStatus <<enum>> {
+        DRAFT
+        VALIDATED
+        ACTIVE
+        CANCELLED
+    }
+
+    Flight "1" *-- "1" FlightDesignator : identified by >
+    Flight "1" --> "1" FlightType : typed as >
+    FlightPlan "1" --> "1" AircraftRegistration : uses >
+    FlightPlan "1" --> "1" PilotID : assigned to >
+    FlightPlan "1" *-- "1" DepartureDatetime
+    FlightPlan "1" --> "1" FlightPlanStatus : current status >
+    Flight "1" *-- "0..*" FlightPlan : has plans >
+
+    FlightPlan "1" *-- "1" FuelQuantity
+}
+
+
+@enduml

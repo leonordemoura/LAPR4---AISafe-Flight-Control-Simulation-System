@@ -1,0 +1,139 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+title US086 - Pilot Remote Access (Class Diagram)
+
+package "RCOMP Client (C)" <<client>> {
+    class PilotClient {
+        +main()
+        +print_menu()
+        -do_login()
+        -do_register_flight_plan()
+        -do_import_flight_plan_file()
+        -do_logout()
+    }
+
+    class ClientSession {
+        -socket: socket_t
+        -connected: int
+        -authenticated: int
+        -username: char[]
+        -host: char[]
+        -port: int
+    }
+
+    class ProtocolIO {
+        +protocol_connect(host, port): socket_t
+        +protocol_send_message(sock, payload): int
+        +protocol_receive_message(sock, buffer): int
+        +protocol_close(sock)
+    }
+
+    note right of PilotClient
+      Command building and response parsing
+      are inline (snprintf / strncmp "OK;")
+      in pilot_client.c — not separate classes.
+    end note
+}
+
+package "AISafe Server (Java, shared infra)" <<server>> {
+    interface RemoteCommandHandler {
+        +handle(commandLine, context): String
+        +serviceId(): String
+    }
+
+    class RemoteAccessTcpServer {
+        +start()
+        -acceptLoop()
+    }
+
+    class RemoteConnectionHandler {
+        +run()
+        -dispatch(request, context): String
+    }
+
+    class RemoteMessageCodec {
+        +readMessage(input): String
+        +writeMessage(output, message)
+    }
+
+    class CompositeRemoteCommandHandler {
+        +handle(commandLine, context): String
+        +serviceId(): String
+    }
+
+    class PilotRemoteCommandHandler {
+        +handle(commandLine, context): String
+        +serviceId(): String
+        -handleLogin(...)
+        -handleLogout(...)
+        -handleRegisterFlightPlan(...)
+        -handleImportFlightPlanFile(...)
+    }
+
+    class WeatherRemoteCommandHandler <<shared US044>> {
+        +handle(commandLine, context): String
+        +serviceId(): String
+        -handleLogin(...)
+        -handleLogout(...)
+        -handleRegisterWeather(...)
+        -handleConsultWeather(...)
+        -handleImportBulk(...)
+    }
+
+    class RemoteConnectionContext {
+        -clientIp: String
+        -clientPort: int
+        -authenticated: boolean
+        -username: String
+        -role: String
+        -serviceId: String
+        +setAuthenticated(username, role, serviceId)
+        +setAuthenticated(username, Role)
+        +role(): String
+        +serviceId(): String
+        +clearAuthentication()
+    }
+
+    class RemoteResponse {
+        +ok(status, payload): String
+        +error(code, message): String
+    }
+
+    class RemoteAccessUdpLogger {
+        +log(username, ip, port, serviceId, event)
+    }
+}
+
+package "aisafe.core (existing)" <<application>> {
+    class RegisterFlightPlanController
+    class ImportFlightPlanFromFileController
+}
+
+PilotClient --> ClientSession
+PilotClient --> ProtocolIO
+
+RemoteAccessTcpServer --> RemoteConnectionHandler : submit per socket
+RemoteAccessTcpServer --> CompositeRemoteCommandHandler : creates
+RemoteConnectionHandler --> RemoteMessageCodec : framed IO
+RemoteConnectionHandler --> RemoteCommandHandler : dispatch
+RemoteConnectionHandler --> RemoteConnectionContext
+RemoteConnectionHandler --> RemoteAccessUdpLogger : DISCONNECT (if auth)
+
+CompositeRemoteCommandHandler ..|> RemoteCommandHandler
+PilotRemoteCommandHandler ..|> RemoteCommandHandler
+WeatherRemoteCommandHandler ..|> RemoteCommandHandler
+CompositeRemoteCommandHandler --> PilotRemoteCommandHandler : PILOT login / pilot cmds
+CompositeRemoteCommandHandler --> WeatherRemoteCommandHandler : weather login / weather cmds
+
+PilotRemoteCommandHandler --> RemoteConnectionContext
+PilotRemoteCommandHandler --> RemoteResponse
+PilotRemoteCommandHandler --> RemoteAccessUdpLogger : LOGIN_*, LOGOUT (US86)
+PilotRemoteCommandHandler --> RegisterFlightPlanController : US080
+PilotRemoteCommandHandler --> ImportFlightPlanFromFileController : US081
+
+ProtocolIO ..> RemoteAccessTcpServer : <<TCP>> connect
+ProtocolIO ..> RemoteMessageCodec : <<protocol>> [4-byte len][UTF-8 payload]
+
+@enduml

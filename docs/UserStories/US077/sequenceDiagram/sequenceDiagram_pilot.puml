@@ -1,0 +1,135 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as Actor
+
+participant ":RemovePilotUI" as UI <<presentation>>
+participant ":RemovePilotController" as Ctrl <<application>>
+participant ":RemovePilotService" as Service <<application>>
+participant ":AuthorizationService" as Authz <<service>>
+
+database ":RepositoryFactory" as RepoFac <<repository>>
+database ":TransactionalContext" as Tx <<persistence>>
+
+database ":PilotCertificationRepository" as PilotRepo <<repository>>
+database ":AirTransportCompanyRepository" as CompanyRepo <<repository>>
+database ":FlightRepository" as FlightRepo <<repository>>
+
+participant "company:AirTransportCompany" as Company <<domain>>
+participant "pilot:PilotCertification" as Pilot <<domain>>
+
+Actor -> UI : request pilot deactivation
+activate UI
+
+UI -> Actor : ask pilot ID
+Actor --> UI : pilotId
+
+UI -> Ctrl : deactivatePilot(pilotId)
+activate Ctrl
+
+' =====================================================
+' AUTHORIZATION (CONTROLLER ONLY)
+' =====================================================
+Ctrl -> Authz : ensureAuthenticatedUserHasAnyOf(ATCC)
+activate Authz
+Authz --> Ctrl : authorized
+deactivate Authz
+
+Ctrl -> Authz : session()
+activate Authz
+Authz --> Ctrl : SystemUser
+deactivate Authz
+
+Ctrl -> Ctrl : extract collaboratorEmail (Email VO)
+
+' =====================================================
+' DELEGATION TO SERVICE
+' =====================================================
+Ctrl -> Service : deactivatePilot(pilotId, collaboratorEmail)
+activate Service
+
+' =====================================================
+' TRANSACTION START (SERVICE)
+' =====================================================
+Service -> RepoFac : newTransactionalContext()
+activate RepoFac
+RepoFac --> Service : Tx
+deactivate RepoFac
+
+Service -> RepoFac : pilots(Tx)
+activate RepoFac
+RepoFac --> Service : PilotRepo
+deactivate RepoFac
+
+Service -> RepoFac : getAirTransportCompanyRepository(Tx)
+activate RepoFac
+RepoFac --> Service : CompanyRepo
+deactivate RepoFac
+
+Service -> RepoFac : flights(Tx)
+activate RepoFac
+RepoFac --> Service : FlightRepo
+deactivate RepoFac
+
+' =====================================================
+' COMPANY RESOLUTION
+' =====================================================
+Service -> CompanyRepo : findByCollaboratorEmail(email)
+activate CompanyRepo
+CompanyRepo --> Service : company
+deactivate CompanyRepo
+
+' =====================================================
+' FIND PILOT
+' =====================================================
+Service -> PilotRepo : findByPilotId(pilotId)
+activate PilotRepo
+PilotRepo --> Service : pilot
+deactivate PilotRepo
+
+' =====================================================
+' DOMAIN VALIDATIONS
+' =====================================================
+Service -> Pilot : company()
+activate Pilot
+Pilot --> Service : company
+deactivate Pilot
+
+Service -> Pilot : isActive()
+activate Pilot
+Pilot --> Service : true
+deactivate Pilot
+
+' =====================================================
+' CROSS-AGGREGATE RULE (US080)
+' =====================================================
+Service -> FlightRepo : hasActiveFlightsForPilot(pilotId)
+activate FlightRepo
+FlightRepo --> Service : false
+deactivate FlightRepo
+
+' =====================================================
+' DOMAIN OPERATION
+' =====================================================
+Service -> Pilot : deactivate()
+activate Pilot
+Pilot --> Service : inactive
+deactivate Pilot
+
+Service -> PilotRepo : save(pilot)
+activate PilotRepo
+PilotRepo --> Service : saved
+deactivate PilotRepo
+
+Service --> Ctrl : success
+deactivate Service
+
+Ctrl --> UI : success
+deactivate Ctrl
+
+UI -> Actor : display confirmation
+deactivate UI
+
+@enduml

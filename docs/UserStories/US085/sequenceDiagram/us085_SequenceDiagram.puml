@@ -1,0 +1,174 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Pilot" as PILOT
+
+participant "ValidateFlightPlanUI" as UI <<presentation>>
+participant "ValidateFlightPlanController" as CTRL <<application>>
+participant "ValidateFlightPlanService" as SVC <<application>>
+
+participant "FlightRepository" as FLIGHT_REPO <<repository>>
+participant "AircraftRepository" as AC_REPO <<repository>>
+
+participant "FlightDslValidator" as DSL_VAL <<dsl>>
+participant "FlightPlanDepartureConsistencyChecker" as DEP_CHK <<application>>
+
+participant "AircraftSimulationParametersResolver" as PARAM_RES <<simulator>>
+participant "FlightPlanSimulator" as SIM <<simulator>>
+
+participant "Flight" as FLIGHT <<aggregateRoot>>
+participant "FlightPlan" as PLAN <<entity>>
+
+activate PILOT
+
+PILOT -> UI : Operations > Validate flight plan
+activate UI
+
+UI -> UI : read airline code, number, suffix
+UI -> UI : build FlightDesignator
+
+UI -> CTRL : validateFlightPlan(designator)
+activate CTRL
+
+CTRL -> CTRL : ensureAuthenticatedUserHasAnyOf(PILOT)
+CTRL -> SVC : validate(designator)
+activate SVC
+
+SVC -> FLIGHT_REPO : findByDesignator(designator)
+activate FLIGHT_REPO
+FLIGHT_REPO --> SVC : Optional<Flight>
+deactivate FLIGHT_REPO
+
+alt flight not found
+    SVC --> CTRL : ValidateFlightPlanResult.failure(FLIGHT_NOT_FOUND)
+    CTRL --> UI : result
+    UI --> PILOT : formattedErrors()
+else plan missing, not DRAFT, or already VALIDATED
+    SVC -> FLIGHT : flightPlan()
+    activate FLIGHT
+    FLIGHT --> SVC : plan
+    deactivate FLIGHT
+    SVC --> CTRL : failure(NO_DRAFT_PLAN / PLAN_ALREADY_VALIDATED)
+    CTRL --> UI : result
+    UI --> PILOT : formattedErrors()
+else DSL validation fails
+    SVC -> FLIGHT : flightPlan()
+    activate FLIGHT
+    FLIGHT --> SVC : plan (DRAFT)
+    deactivate FLIGHT
+
+    SVC -> DSL_VAL : validate(plan.dslSource().content())
+    activate DSL_VAL
+    DSL_VAL --> SVC : FlightDslValidationResult (invalid)
+    deactivate DSL_VAL
+
+    SVC --> CTRL : failure(DSL_VALIDATION + line/col)
+    CTRL --> UI : result
+    UI --> PILOT : formattedErrors()
+else flight id / route / departure mismatch
+    SVC -> FLIGHT : flightPlan()
+    activate FLIGHT
+    FLIGHT --> SVC : plan (DRAFT)
+    deactivate FLIGHT
+
+    SVC -> DSL_VAL : validate(plan.dslSource().content())
+    activate DSL_VAL
+    DSL_VAL --> SVC : FlightDslValidationResult (valid + DslFlightPlan)
+    deactivate DSL_VAL
+
+    SVC -> SVC : check DSL identifier vs Flight.designator
+    SVC -> SVC : check DSL route vs Flight.route
+
+    SVC -> DEP_CHK : mismatchMessage(plan.departureDateTime(), dslPlan)
+    activate DEP_CHK
+    DEP_CHK --> SVC : Optional error message
+    deactivate DEP_CHK
+
+    SVC --> CTRL : failure(FLIGHT_ID_MISMATCH / ROUTE_MISMATCH / DEPARTURE_MISMATCH)
+    CTRL --> UI : result
+    UI --> PILOT : formattedErrors()
+else aircraft not found
+    note over SVC
+      DSL valid and consistency checks passed
+    end note
+
+    SVC -> AC_REPO : findByRegistration(flight.aircraftRegistration)
+    activate AC_REPO
+    AC_REPO --> SVC : Optional.empty()
+    deactivate AC_REPO
+
+    SVC --> CTRL : failure(AIRCRAFT_NOT_FOUND)
+    CTRL --> UI : result
+    UI --> PILOT : formattedErrors()
+else simulation parameters unavailable
+    SVC -> AC_REPO : findByRegistration(flight.aircraftRegistration)
+    activate AC_REPO
+    AC_REPO --> SVC : Aircraft
+    deactivate AC_REPO
+
+    SVC -> PARAM_RES : resolve(aircraft)
+    activate PARAM_RES
+    PARAM_RES --> SVC : Optional.empty()
+    deactivate PARAM_RES
+
+    SVC --> CTRL : failure(SIMULATION_FAILED)
+    CTRL --> UI : result
+    UI --> PILOT : formattedErrors()
+else insufficient fuel
+    SVC -> PARAM_RES : resolve(aircraft)
+    activate PARAM_RES
+    PARAM_RES --> SVC : SimulatorModelParameters
+    deactivate PARAM_RES
+
+    SVC -> SIM : simulate(dslPlan, plan.fuelQuantity(), params)
+    activate SIM
+
+    note right of SIM
+      Per DSL segment: climb 69 m -> cruise alt,
+      cruise (Haversine), descend to 69 m.
+      3 iterations; compare requiredFuelKg
+      vs operational fuel (plan.fuelQuantity()).
+    end note
+
+    SIM --> SVC : FlightPlanSimulationResult (failed)
+    deactivate SIM
+
+    SVC --> CTRL : failure(INSUFFICIENT_FUEL)
+    CTRL --> UI : result
+    UI --> PILOT : estimated vs available fuel
+else success
+    SVC -> PARAM_RES : resolve(aircraft)
+    activate PARAM_RES
+    PARAM_RES --> SVC : SimulatorModelParameters
+    deactivate PARAM_RES
+
+    SVC -> SIM : simulate(dslPlan, plan.fuelQuantity(), params)
+    activate SIM
+    SIM --> SVC : FlightPlanSimulationResult (success)
+    deactivate SIM
+
+    SVC -> PLAN : markAsValidated()
+    activate PLAN
+    PLAN -> PLAN : status = VALIDATED
+    deactivate PLAN
+
+    SVC -> FLIGHT_REPO : save(flight)
+    activate FLIGHT_REPO
+    FLIGHT_REPO --> SVC : saved Flight
+    deactivate FLIGHT_REPO
+
+    SVC -> SVC : build ValidateFlightPlanSummary
+    SVC --> CTRL : success(flight, plan, summary)
+    deactivate SVC
+
+    CTRL --> UI : ValidateFlightPlanResult
+    deactivate CTRL
+
+    UI --> PILOT : summary.formattedLines()
+    deactivate UI
+end
+
+@enduml

@@ -1,0 +1,145 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+title US091 - Remote Accesses Logging Visualization
+
+package "Remote Accesses Logging Server" {
+
+    class LoggingServerMain {
+        +main()
+    }
+
+    ' =====================================================
+    ' UDP (US90)
+    ' =====================================================
+    class UdpLogReceiver <<thread>> {
+        -port : int
+        +run()
+        -parseUdpPacket(data)
+    }
+
+    ' =====================================================
+    ' HTTP (US91)
+    ' =====================================================
+    class HttpServer <<thread>> {
+        -port : int
+        +start()
+    }
+
+    class HttpRouter {
+        +route(request): HttpResponse
+    }
+
+    class EventController {
+        +getLastEvents(): List<AccessEventDTO>
+    }
+
+    class ActiveUsersController {
+        +getActiveUsers(): List<UserDTO>
+    }
+
+    ' =====================================================
+    ' APPLICATION CORE
+    ' =====================================================
+    class LogService {
+        +addEvent(event: AccessEvent)
+        +getLastEvents(): List<AccessEvent>
+        +getActiveUsers(): List<String>
+    }
+
+    interface LogRepository {
+        +save(event: AccessEvent)
+        +findLastEvents(): List<AccessEvent>
+        +findActiveUsers(): List<String>
+    }
+
+    class InMemoryLogRepository {
+        -events : List<AccessEvent>
+    }
+
+    class ActiveUserRegistry {
+        +userConnected(username)
+        +userDisconnected(username)
+        +getActiveUsers(): List<String>
+    }
+
+    ' =====================================================
+    ' DOMAIN MODEL
+    ' =====================================================
+    class AccessEvent {
+        -timestamp : DateTime
+        -username : String
+        -clientIp : String
+        -clientPort : int
+        -service : ServiceType
+        -eventType : EventType
+    }
+
+    enum ServiceType {
+        US44
+        US78
+        US86
+    }
+
+    enum EventType {
+        LOGIN_SUCCESS
+        LOGIN_FAILURE
+        LOGOUT
+        DISCONNECT
+    }
+
+}
+
+package "Web Client (Browser)" {
+
+    class "index.html" as UI <<HTML>>
+    class "logging-ajax.js" as JS <<JavaScript>>
+}
+
+' =====================================================
+' STRUCTURE RELATIONS (FIXED)
+' =====================================================
+
+InMemoryLogRepository ..|> LogRepository
+
+AccessEvent --> ServiceType
+AccessEvent --> EventType
+
+' =====================================================
+' STARTUP
+' =====================================================
+LoggingServerMain --> UdpLogReceiver
+LoggingServerMain --> HttpServer
+
+' =====================================================
+' UDP FLOW (US90)
+' =====================================================
+UdpLogReceiver --> LogService : addEvent()
+LogService --> ActiveUserRegistry : update()
+
+' =====================================================
+' HTTP FLOW (US91)
+' =====================================================
+HttpServer --> HttpRouter
+HttpRouter --> EventController
+HttpRouter --> ActiveUsersController
+
+EventController --> LogService
+ActiveUsersController --> LogService
+
+
+' =====================================================
+' CLIENT
+' =====================================================
+JS --> HttpServer : AJAX GET
+UI ..> JS
+
+UdpLogReceiver --> LogService : create AccessEvent
+
+LogService --> AccessEvent : creates
+LogService --> LogRepository : save(AccessEvent)
+
+LogRepository ..> AccessEvent : persists
+
+@enduml

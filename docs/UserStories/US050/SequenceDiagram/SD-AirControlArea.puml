@@ -1,0 +1,158 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as BO
+participant "RegisterAirControlAreaUI" as UI <<presentation>>
+participant "RegisterAirControlAreaController" as CTRL <<application>>
+database "PersistenceContext" as Persistence <<persistence>>
+database "AppSettings" as AppSettings <<persistence>>
+database "RepositoryFactory" as Factory <<factory>>
+database "AirControlAreaRepository" as REPO <<repository>>
+participant "AirControlArea\n<<Aggregate Root>>" as DOMAIN <<domain>>
+
+activate BO
+BO -> UI : request to register\nan air control area
+activate UI
+
+UI -> BO : ask for area code
+BO -> UI : enter area code
+
+UI -> CTRL : checkAreaCodeExists(areaCode)
+activate CTRL
+
+CTRL -> Persistence : repositories()
+activate Persistence
+Persistence -> AppSettings : instance()
+activate AppSettings
+Persistence -> AppSettings : getRepositoryFactory()
+AppSettings -> Factory : create()
+activate Factory
+Factory --> AppSettings : repositoryFactory
+deactivate Factory
+AppSettings --> Persistence : repositoryFactory
+deactivate AppSettings
+Persistence --> CTRL : repositoryFactory
+deactivate Persistence
+
+CTRL -> Factory : getAirControlAreaRepository()
+activate Factory
+Factory --> CTRL : AirControlAreaRepository
+deactivate Factory
+
+CTRL -> REPO : existsByAreaCode(areaCode)
+activate REPO
+
+alt area code already exists
+    REPO --> CTRL : true
+    deactivate REPO
+    CTRL --> UI : error - area code already exists
+    deactivate CTRL
+    UI --> BO : display error message
+
+else area code available
+    REPO --> CTRL : false
+    deactivate REPO
+    CTRL --> UI : area code valid
+    deactivate CTRL
+
+    UI -> BO : ask for area name
+    BO -> UI : enter area name
+
+    UI -> CTRL : checkAreaNameExists(areaName)
+    activate CTRL
+
+    CTRL -> Factory : getAirControlAreaRepository()
+    activate Factory
+    Factory --> CTRL : AirControlAreaRepository
+    deactivate Factory
+
+    CTRL -> REPO : existsByAreaName(areaName)
+    activate REPO
+
+    alt area name already exists
+        REPO --> CTRL : true
+        deactivate REPO
+        CTRL --> UI : error - area name already exists
+        deactivate CTRL
+        UI --> BO : display error message
+
+    else area name available
+        REPO --> CTRL : false
+        deactivate REPO
+        CTRL --> UI : area name valid
+        deactivate CTRL
+
+        UI -> BO : ask for minimum fuel at arrival
+        BO -> UI : enter minimum fuel at arrival
+
+        UI -> BO : ask for 4 coordinates\n(latitude, longitude)
+        BO -> UI : enter coordinates
+
+        UI -> CTRL : checkOverlappingArea(geoBoundary)
+        activate CTRL
+
+        CTRL -> Factory : getAirControlAreaRepository()
+        activate Factory
+        Factory --> CTRL : AirControlAreaRepository
+        deactivate Factory
+
+        CTRL -> REPO : existsOverlappingArea(geoBoundary)
+        activate REPO
+
+        alt overlapping area exists
+            REPO --> CTRL : true
+            deactivate REPO
+            CTRL --> UI : error - overlapping area exists
+            deactivate CTRL
+            UI --> BO : display error message
+
+        else no overlap
+            REPO --> CTRL : false
+            deactivate REPO
+            CTRL --> UI : boundary valid
+            deactivate CTRL
+
+            UI -> CTRL : registerAirControlArea(areaCode, areaName,\n  minFuelAtArrival, maxAltitude,\n  geoBoundary)
+            activate CTRL
+
+            CTRL -> Factory : getAirControlAreaRepository()
+            activate Factory
+            Factory --> CTRL : AirControlAreaRepository
+            deactivate Factory
+
+            CTRL -> DOMAIN : new AirControlArea(areaCode, areaName,\n  minFuelAtArrival, maxAltitude,\n  geoBoundary)
+            activate DOMAIN
+            note right of DOMAIN
+                Enforced Invariants:
+                - AreaCode not empty
+                - AreaName not empty
+                - MinFuelAtArrival > 0
+                - MaxAltitude > 0
+                - GeoBoundary consists of exactly
+                  4 valid coordinates
+                - Coordinates define a valid rectangle
+            end note
+            DOMAIN --> CTRL : airControlArea
+            deactivate DOMAIN
+
+            CTRL -> REPO : save(airControlArea)
+            activate REPO
+            REPO --> CTRL : airControlArea
+            deactivate REPO
+
+            CTRL --> UI : registration successful
+            deactivate CTRL
+
+            UI --> BO : display success message\nwith area code and name
+        end
+    end
+end
+
+deactivate UI
+
+deactivate BO
+
+@enduml

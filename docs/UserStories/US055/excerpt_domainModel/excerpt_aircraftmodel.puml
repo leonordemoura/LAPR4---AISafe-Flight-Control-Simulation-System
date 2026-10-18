@@ -1,0 +1,99 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "AircraftModel Aggregate" {
+
+    class AircraftModel <<entity>> <<root>> {
+    }
+
+    class AircraftModelId <<vo>> {
+        modelID
+    }
+
+    class AircraftModelName <<vo>> {
+        name
+    }
+
+    class Weight <<vo>> {
+        value
+        unit
+    }
+
+    class Altitude <<vo>> {
+        value
+        unit
+    }
+
+    class Speed <<vo>> {
+        value
+        unit
+    }
+
+    class Area <<vo>> {
+        value
+        unit
+    }
+
+    class DragCoefficient <<vo>> {
+        value
+    }
+
+    class LiftCoefficient <<vo>> {
+            value
+        }
+
+        class MaximumSeats <<vo>> {
+                    value
+                }
+
+    enum AircraftType <<enum>> {
+        PASSENGER
+        CARGO
+        MIXED
+    }
+
+    class EngineModel <<entity>> {
+    }
+
+    class Maker <<entity>>
+
+    class MakerName <<vo>> {
+        name
+    }
+
+    class Country <<vo>> {
+        numericCode
+        name
+    }
+
+    class MakerId <<vo>> {
+        value
+    }
+
+    Maker "1" *-- "1" MakerId
+    Maker "1" *-- "1" MakerName
+    Maker "1" *-- "1" Country
+
+    AircraftModel "1" *-- "1" AircraftModelName
+    AircraftModel "1" *-- "1" Weight : emptyWeight
+    AircraftModel "1" *-- "1" Weight : mtow
+    AircraftModel "1" *-- "1" Weight : mzfw
+    AircraftModel "1" *-- "1" Weight : fuelCapacity
+    AircraftModel "1" *-- "1" Altitude
+    AircraftModel "1" *-- "1" Speed
+    AircraftModel "1" *-- "1" Area
+    AircraftModel "1" *-- "1" MaximumSeats
+    AircraftModel "1" *-- "1" DragCoefficient
+    AircraftModel "1" *-- "1" LiftCoefficient
+    AircraftModel "1" --> "1" AircraftType
+    AircraftModel "1..*" --> "1" Maker
+    AircraftModel "1" *-- "1" AircraftModelId
+
+
+    AircraftModel "1..*" --> "1..*" EngineModel : uses >
+}
+
+@enduml

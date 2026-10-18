@@ -1,0 +1,76 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Weather Person" as User
+
+participant "ImportBulkWeatherDataUI" as UI <<presentation>>
+participant "ImportBulkWeatherDataController" as Controller <<controller>>
+participant "ImportBulkWeatherDataService" as Service <<service>>
+
+database "RepositoryFactory" as RepoFac <<repository>>
+database "WeatherDataRepository" as WeatherRepo <<repository>>
+
+participant "ExternalWeatherProvider\n(CSV / API / Future)" as Provider <<external>>
+
+participant "WeatherData\n<<Aggregate Root>>" as WeatherData <<domain>>
+
+activate User
+
+User -> UI : requests bulk import
+activate UI
+
+UI -> User : request file / source selection
+User -> UI : provides CSV / source input
+
+UI -> Controller : importBulkWeatherData(source, input)
+activate Controller
+
+Controller -> Service : importBulkWeatherData(source, input)
+activate Service
+
+Service -> Provider : fetchRawWeatherData(input)
+activate Provider
+Provider --> Service : rawWeatherRecords
+deactivate Provider
+
+Service -> Service : parseRecords(rawWeatherRecords)
+
+loop for each record
+
+    Service -> Service : validateRecord(record)
+
+    alt valid record
+        Service -> WeatherData : create(record)
+        activate WeatherData
+        WeatherData --> Service : weatherData
+        deactivate WeatherData
+
+        Service -> WeatherRepo : save(weatherData)
+        activate WeatherRepo
+        WeatherRepo --> Service : saved
+        deactivate WeatherRepo
+
+    else invalid record
+        Service -> Service : markAsRejected(record)
+    end
+
+end
+
+Service -> Service : buildImportResult()
+
+Service --> Controller : ImportResult
+deactivate Service
+
+Controller --> UI : ImportResult
+
+UI --> User : displays success + failures summary
+
+deactivate UI
+deactivate User
+
+@enduml

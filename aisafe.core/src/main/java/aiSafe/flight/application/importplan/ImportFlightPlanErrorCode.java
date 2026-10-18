@@ -1,0 +1,16 @@
+package aiSafe.flight.application.importplan;
+
+public enum ImportFlightPlanErrorCode {
+    EMPTY_FILE,
+    FILE_TOO_LARGE,
+    FILE_READ_ERROR,
+    UNSUPPORTED_FORMAT,
+    FLIGHT_NOT_FOUND,
+    FLIGHT_PLAN_NOT_REPLACEABLE,
+    ROUTE_MISMATCH,
+    DSL_VALIDATION,
+    FLIGHT_ID_MISMATCH,
+    PILOT_NOT_FOUND,
+    PILOT_SCHEDULE_CONFLICT,
+    SCOMP_JSON_WRITE_FAILED
+}

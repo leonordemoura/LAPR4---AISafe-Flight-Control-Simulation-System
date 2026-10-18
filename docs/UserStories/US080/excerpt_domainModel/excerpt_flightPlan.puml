@@ -1,0 +1,206 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "FlightRoute Aggregate" <<Rectangle>> {
+
+    class FlightRoute <<entity>> <<root>> {
+        isActive
+    }
+
+    class DeactivationDate <<vo>> {
+        value
+    }
+
+    class RouteName <<vo>> {
+        companyIata
+        ' exactly 2 letters
+        number
+        ' 1 to 4 digits (e.g. TP123)
+    }
+
+    class RouteDesignator <<vo>> {
+        origin
+        destination
+    }
+
+    ' Relacionamentos FlightRoute
+    DeactivationDate "1" --* "1" FlightRoute : has <
+    FlightRoute "1" *-- "1" RouteName : identified by >
+    FlightRoute "1" *-- "1" RouteDesignator : has >
+}
+
+package "Flight Aggregate" {
+    class Flight <<entity>> <<aggregateRoot>> {
+    }
+
+    class FlightDesignator <<vo>> {
+        airlineCode
+        flightNumber
+        operationalSuffix
+    }
+
+    class FlightPlan <<entity>> {
+        submittedAt
+        rejectionReason
+    }
+
+    class FuelQuantity <<vo>> {
+        value
+        unit
+    }
+
+    class DepartureDatetime <<vo>> {
+        dateTime
+    }
+
+    class AircraftRegistration <<vo>> {
+        value
+    }
+
+    class PilotID <<vo>> {
+        email
+    }
+
+
+    enum FlightType <<enum>> {
+        REGULAR
+        CHARTER
+    }
+
+    enum FlightPlanStatus <<enum>> {
+        DRAFT
+        VALIDATED
+        ACTIVE
+        CANCELLED
+    }
+
+    Flight "1" *-- "1" FlightDesignator : identified by >
+    Flight "1" --> "1" FlightType : typed as >
+    FlightPlan "1" --> "1" AircraftRegistration : uses >
+    FlightPlan "1" --> "1" PilotID : assigned to >
+    FlightPlan "1" *-- "1" DepartureDatetime
+    FlightPlan "1" --> "1" FlightPlanStatus : current status >
+    Flight "1" *-- "0..*" FlightPlan : has plans >
+
+    FlightPlan "1" *-- "1" FuelQuantity
+}
+
+package "AirTransportCompany Aggregate" {
+    class AirTransportCompany <<entity>> <<root>> {
+        }
+
+        class CompanyName <<vo>> {
+            value
+        }
+
+        class IataCode <<vo>> {
+            value
+        }
+
+        class IcaoCode <<vo>> {
+            value
+        }
+
+        class Membership <<vo>> {
+            userEmail
+            active
+        }
+
+        enum MemberType <<enum>> {
+            ATCC
+            PILOT
+            FCO
+        }
+
+        class Position <<vo>> {
+            position
+        }
+
+
+        AirTransportCompany "1" *-- "1" CompanyName
+        AirTransportCompany "1" *-- "1" IataCode
+        AirTransportCompany "1" *-- "1" IcaoCode
+        AirTransportCompany "1" -- "0.." Membership : has >
+        Membership "1" *-- "1" MemberType : typed as >
+        Membership "1" --> "1" Position : has >
+}
+
+package "Aircraft Aggregate"{
+    class Aircraft <<entity>> <<root>> {
+    }
+
+    class AircraftRegistration <<vo>> {
+        value
+    }
+
+    class RegistrationYear <<vo>> {
+        value
+    }
+
+    class FlightCrewSize <<vo>> {
+        value
+    }
+
+    class Country <<vo>> {
+        code
+        name
+    }
+
+    class CabinConfiguration <<vo>> {
+        firstClassSeats
+        businessSeats
+        economySeats
+    }
+
+    enum AircraftStatus <<enum>> {
+        ACTIVE
+        DECOMMISSIONED
+    }
+
+    class currentEngine <<vo>> {
+        engineModelId
+    }
+
+    ' Relacionamentos Aircraft
+    Aircraft "1" *-- "1" AircraftRegistration
+    Aircraft "1" -- "1.." currentEngine : equipped with >
+    Aircraft "1" *-- "1" RegistrationYear : registered in >
+    Aircraft "1" *-- "1" FlightCrewSize
+    Aircraft "1" *-- "1" Country : registered in >
+    Aircraft "1" *-- "1" CabinConfiguration
+    Aircraft "1" --> "1" AircraftStatus : has >
+
+}
+
+package "PilotCertification Aggregate" <<Rectangle>> {
+
+     class PilotCertification <<entity>> <<root>> {
+         active
+     }
+
+     class PilotID <<vo>> {
+         value
+     }
+
+     class ModelCertification <<vo>> {
+         aircraftModelId
+         certificationDate
+     }
+
+     PilotCertification "1" *-- "1" PilotID : identifies >
+     PilotCertification "1" *-- "1" Email
+     ' Relacionamentos PilotCertification
+     PilotCertification "1" -- "1.." ModelCertification : certifiedFor >
+
+ }
+
+Flight "0..*" --> "1" FlightRoute : belongs to
+FlightRoute "1" --> "1" AirTransportCompany : belongs to >
+AirTransportCompany "1" --> "0..*" PilotCertification : manages certifications
+Aircraft "0..*" --> "1" AirTransportCompany : belongs to
+
+
+@enduml

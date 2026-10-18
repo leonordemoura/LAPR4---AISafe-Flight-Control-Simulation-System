@@ -1,0 +1,104 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Pilot" as User
+participant "InsertWeatherDataUI" as UI <<presentation>>
+participant "InsertWeatherDataController" as Controller <<application>>
+participant "InsertWeatherDataService" as Service <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "FlightRepository" as FlightRepo <<repository>>
+database "WeatherDataRepository" as WeatherRepo <<repository>>
+participant "FlightPlan\n<<Entity>>" as FP <<domain>>
+
+activate User
+
+    User -> UI : requests to insert weather data in flight plan
+    activate UI
+
+        UI --> User : asks for flight plan and weather data details
+        User -> UI : provides flightDesignator, flightPlanId, weatherDataId
+
+        UI -> Controller : insertWeatherData(flightDesignator, flightPlanId, weatherDataId)
+        activate Controller
+
+            Controller -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+                    activate RepoFac
+                        RepoFac --> AS : repositoryFactory
+                    deactivate RepoFac
+                    AS --> PC : repositoryFactory
+                deactivate AS
+            PC --> Controller : repositoryFactory
+            deactivate PC
+
+            Controller -> Service : insertWeatherData(flightDesignator, flightPlanId, weatherDataId, repositoryFactory)
+            activate Service
+
+                Service -> RepoFac : getFlightRepository()
+                activate RepoFac
+                    RepoFac -> FlightRepo : create()
+                    activate FlightRepo
+                        FlightRepo --> RepoFac : flightRepository
+                    deactivate FlightRepo
+                    RepoFac --> Service : flightRepository
+                deactivate RepoFac
+
+                Service -> RepoFac : getWeatherDataRepository()
+                activate RepoFac
+                    RepoFac -> WeatherRepo : create()
+                    activate WeatherRepo
+                        WeatherRepo --> RepoFac : weatherDataRepository
+                    deactivate WeatherRepo
+                    RepoFac --> Service : weatherDataRepository
+                deactivate RepoFac
+
+                Service -> FlightRepo : findByDesignator(flightDesignator)
+                activate FlightRepo
+                    FlightRepo --> Service : flight
+                deactivate FlightRepo
+
+                Service -> FlightRepo : findFlightPlan(flightDesignator, flightPlanId)
+                Note right of FlightRepo: **Enforced Invariant**\n- flight plan belongs to pilot
+                activate FlightRepo
+                    FlightRepo --> Service : flightPlan
+                deactivate FlightRepo
+
+                Service -> WeatherRepo : findById(weatherDataId)
+                activate WeatherRepo
+                    WeatherRepo --> Service : weatherData
+                deactivate WeatherRepo
+
+                Service -> FP : addWeatherData(weatherData)
+                Note right of FP: **Enforced Invariants**\n- weatherData region matches flight route area\n- weatherData timestamp compatible with flight schedule\n- previous validation/simulation state is invalidated
+                activate FP
+                    FP --> Service : true
+                deactivate FP
+
+                Service -> FlightRepo : save(flight)
+                activate FlightRepo
+                    FlightRepo --> Service : success
+                deactivate FlightRepo
+
+                Service --> Controller : success
+            deactivate Service
+
+            Controller --> UI : output message
+        deactivate Controller
+
+        UI --> User : displays success message
+    deactivate UI
+
+deactivate User
+
+@enduml

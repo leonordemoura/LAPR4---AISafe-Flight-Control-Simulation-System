@@ -1,0 +1,182 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+package "aisafe" {
+
+    package "app" {
+
+        package "pilotcertification.console" {
+
+            class ListPilotRosterUI <<presentation>> {
+                - controller : ListPilotRosterController
+                + doShow() : boolean
+            }
+        }
+    }
+
+    package "core" {
+
+        ' =====================================================
+        ' PILOT CERTIFICATION AGGREGATE
+        ' =====================================================
+
+        package "PilotCertification Aggregate" {
+
+            class ListPilotRosterController <<controller>> {
+                - authz : AuthorizationService
+                - factory : RepositoryFactory
+                + listRoster() : List<PilotRosterDTO>
+            }
+
+            class PilotRosterDTO <<dto>> {
+                + pilotId : String
+                + email : String
+                + active : boolean
+                + certifiedAircraftModels : List<String>
+            }
+
+            interface PilotCertificationRepository <<repository>> {
+                + findByPilotId(pilotId : PilotID)
+                + findByUserEmail(email : Email)
+                + findByCompany(company : AirTransportCompany)
+            }
+
+            class PilotCertification <<entity>> <<aggregateRoot>> {
+                - pilotId : PilotID
+                - userEmail : Email
+                - company : AirTransportCompany
+                - active : boolean
+                - certifications : Set<ModelCertification>
+            }
+
+            class PilotID <<vo>>
+
+            class ModelCertification <<vo>> {
+                - aircraftModelId : AircraftModelId
+                - certificationDate : LocalDate
+            }
+
+            ' ================= DOMAIN =================
+
+            PilotCertification "1" *-- "1" PilotID
+            PilotCertification "1" *-- "1..*" ModelCertification
+            PilotCertification "1" --> "1" AirTransportCompany
+
+            PilotCertificationRepository ..> PilotCertification
+
+            ModelCertification --> AircraftModelId
+        }
+
+        ' =====================================================
+        ' AIR TRANSPORT COMPANY AGGREGATE
+        ' =====================================================
+
+        package "AirTransportCompany Aggregate" {
+
+            class AirTransportCompany <<entity>> <<aggregateRoot>>
+
+            interface AirTransportCompanyRepository <<repository>> {
+                + findByCollaboratorEmail(email : Email)
+            }
+
+            AirTransportCompanyRepository ..> AirTransportCompany
+        }
+
+        ' =====================================================
+        ' AIRCRAFT MODEL AGGREGATE
+        ' =====================================================
+
+        package "AircraftModel Aggregate" {
+
+            class AircraftModel <<entity>>
+
+            class AircraftModelId <<vo>>
+
+            interface AircraftModelRepository <<repository>>
+
+            AircraftModel --> AircraftModelId
+
+            AircraftModelRepository ..> AircraftModel
+        }
+
+        ' =====================================================
+        ' USER AGGREGATE
+        ' =====================================================
+
+        package "User Aggregate" {
+
+            class User <<entity>> <<aggregateRoot>>
+
+            class Email <<vo>>
+
+            class AisafeRoles <<vo>>
+
+            interface UserRepository <<repository>>
+
+            UserRepository ..> User
+
+            User --> Email
+            User --> AisafeRoles
+        }
+
+        ' =====================================================
+        ' INFRASTRUCTURE / SERVICES
+        ' =====================================================
+
+        class PersistenceContext <<service>> {
+            {static} + repositories() : RepositoryFactory
+        }
+
+        class TransactionalContext <<service>>
+
+        interface RepositoryFactory <<factory>> {
+
+            + newTransactionalContext() : TransactionalContext
+
+            + pilots(
+                txCtx : TransactionalContext
+            ) : PilotCertificationRepository
+
+            + getAirTransportCompanyRepository(
+                txCtx : TransactionalContext
+            ) : AirTransportCompanyRepository
+        }
+
+        class AuthorizationService <<service>>
+    }
+
+    ' =====================================================
+    ' UI
+    ' =====================================================
+
+    ListPilotRosterUI ..> ListPilotRosterController
+
+    PilotRosterDTO ..> PilotCertification
+
+    ' =====================================================
+    ' CONTROLLER
+    ' =====================================================
+
+    ListPilotRosterController ..> AuthorizationService
+    ListPilotRosterController ..> RepositoryFactory
+    ListPilotRosterController ..> PersistenceContext
+
+    ListPilotRosterController ..> PilotCertificationRepository
+    ListPilotRosterController ..> AirTransportCompanyRepository
+
+    ListPilotRosterController ..> PilotRosterDTO
+
+    ListPilotRosterController ..> TransactionalContext
+
+    ' =====================================================
+    ' REPOSITORY FACTORY
+    ' =====================================================
+
+    RepositoryFactory ..> PilotCertificationRepository
+    RepositoryFactory ..> AirTransportCompanyRepository
+    RepositoryFactory ..> UserRepository
+    RepositoryFactory ..> AircraftModelRepository
+}
+@enduml

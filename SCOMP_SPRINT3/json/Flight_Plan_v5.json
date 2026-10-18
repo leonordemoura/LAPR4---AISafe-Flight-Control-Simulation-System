@@ -1,0 +1,494 @@
+{
+  "Flights": [
+    {
+      "ID": 101, "Type": "regular", "Route": "TP101", "DepartureDate": "2026-06-15", "DepartureTime": "06:00",
+      "Leg": [{ "Departure": "LIS", "Arrival": "MUC", "Fuel": { "Quantity": 18000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 41.0, "Longitude": -7.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 41.0, "Longitude": -7.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 47.0, "Longitude": 3.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.0, "Longitude": 3.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.3, "Longitude": 11.7, "Altitude": { "Quantity": 453, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 201, "Type": "regular", "Route": "CONFLITO_A1", "DepartureDate": "2026-06-15", "DepartureTime": "08:00",
+      "Leg": [{ "Departure": "LIS", "Arrival": "CDG", "Fuel": { "Quantity": 15000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 202, "Type": "regular", "Route": "CONFLITO_A2", "DepartureDate": "2026-06-15", "DepartureTime": "08:01",
+      "Leg": [{ "Departure": "LIS", "Arrival": "CDG", "Fuel": { "Quantity": 15000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 203, "Type": "regular", "Route": "CONFLITO_A3", "DepartureDate": "2026-06-15", "DepartureTime": "08:02",
+      "Leg": [{ "Departure": "LIS", "Arrival": "CDG", "Fuel": { "Quantity": 15000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 204, "Type": "regular", "Route": "CONFLITO_A4", "DepartureDate": "2026-06-15", "DepartureTime": "08:03",
+      "Leg": [{ "Departure": "LIS", "Arrival": "CDG", "Fuel": { "Quantity": 15000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 205, "Type": "regular", "Route": "CONFLITO_A5", "DepartureDate": "2026-06-15", "DepartureTime": "08:04",
+      "Leg": [{ "Departure": "LIS", "Arrival": "CDG", "Fuel": { "Quantity": 15000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 206, "Type": "regular", "Route": "CONFLITO_A6", "DepartureDate": "2026-06-15", "DepartureTime": "08:05",
+      "Leg": [{ "Departure": "LIS", "Arrival": "CDG", "Fuel": { "Quantity": 15000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } }, "End": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 42.0, "Longitude": -5.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 47.5, "Longitude": 0.5, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 301, "Type": "regular", "Route": "CONFLITO_B1", "DepartureDate": "2026-06-15", "DepartureTime": "12:00",
+      "Leg": [{ "Departure": "MAD", "Arrival": "FRA", "Fuel": { "Quantity": 14000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 8.6, "Altitude": { "Quantity": 111, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 302, "Type": "regular", "Route": "CONFLITO_B2", "DepartureDate": "2026-06-15", "DepartureTime": "12:01",
+      "Leg": [{ "Departure": "MAD", "Arrival": "FRA", "Fuel": { "Quantity": 14000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 8.6, "Altitude": { "Quantity": 111, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 303, "Type": "regular", "Route": "CONFLITO_B3", "DepartureDate": "2026-06-15", "DepartureTime": "12:02",
+      "Leg": [{ "Departure": "MAD", "Arrival": "FRA", "Fuel": { "Quantity": 14000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 8.6, "Altitude": { "Quantity": 111, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 304, "Type": "regular", "Route": "CONFLITO_B4", "DepartureDate": "2026-06-15", "DepartureTime": "12:03",
+      "Leg": [{ "Departure": "MAD", "Arrival": "FRA", "Fuel": { "Quantity": 14000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 8.6, "Altitude": { "Quantity": 111, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 305, "Type": "regular", "Route": "CONFLITO_B5", "DepartureDate": "2026-06-15", "DepartureTime": "12:04",
+      "Leg": [{ "Departure": "MAD", "Arrival": "FRA", "Fuel": { "Quantity": 14000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 8.6, "Altitude": { "Quantity": 111, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 306, "Type": "regular", "Route": "CONFLITO_B6", "DepartureDate": "2026-06-15", "DepartureTime": "12:05",
+      "Leg": [{ "Departure": "MAD", "Arrival": "FRA", "Fuel": { "Quantity": 14000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 1.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.0, "Longitude": 6.0, "Altitude": { "Quantity": 11000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 8.6, "Altitude": { "Quantity": 111, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 501, "Type": "regular", "Route": "CONFLITO_C1", "DepartureDate": "2026-06-15", "DepartureTime": "16:00",
+      "Leg": [{ "Departure": "OPO", "Arrival": "AMS", "Fuel": { "Quantity": 16000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.2, "Longitude": -8.7, "Altitude": { "Quantity": 80, "Unit": "m" } }, "End": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 52.3, "Longitude": 4.7, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 502, "Type": "regular", "Route": "CONFLITO_C2", "DepartureDate": "2026-06-15", "DepartureTime": "16:01",
+      "Leg": [{ "Departure": "OPO", "Arrival": "AMS", "Fuel": { "Quantity": 16000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.2, "Longitude": -8.7, "Altitude": { "Quantity": 80, "Unit": "m" } }, "End": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 52.3, "Longitude": 4.7, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 503, "Type": "regular", "Route": "CONFLITO_C3", "DepartureDate": "2026-06-15", "DepartureTime": "16:02",
+      "Leg": [{ "Departure": "OPO", "Arrival": "AMS", "Fuel": { "Quantity": 16000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.2, "Longitude": -8.7, "Altitude": { "Quantity": 80, "Unit": "m" } }, "End": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 52.3, "Longitude": 4.7, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 504, "Type": "regular", "Route": "CONFLITO_C4", "DepartureDate": "2026-06-15", "DepartureTime": "16:03",
+      "Leg": [{ "Departure": "OPO", "Arrival": "AMS", "Fuel": { "Quantity": 16000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.2, "Longitude": -8.7, "Altitude": { "Quantity": 80, "Unit": "m" } }, "End": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 52.3, "Longitude": 4.7, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 505, "Type": "regular", "Route": "CONFLITO_C5", "DepartureDate": "2026-06-15", "DepartureTime": "16:04",
+      "Leg": [{ "Departure": "OPO", "Arrival": "AMS", "Fuel": { "Quantity": 16000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.2, "Longitude": -8.7, "Altitude": { "Quantity": 80, "Unit": "m" } }, "End": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 52.3, "Longitude": 4.7, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 506, "Type": "regular", "Route": "CONFLITO_C6", "DepartureDate": "2026-06-15", "DepartureTime": "16:05",
+      "Leg": [{ "Departure": "OPO", "Arrival": "AMS", "Fuel": { "Quantity": 16000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.2, "Longitude": -8.7, "Altitude": { "Quantity": 80, "Unit": "m" } }, "End": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 45.0, "Longitude": -4.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 50.0, "Longitude": 1.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }, "End": { "Latitude": 52.3, "Longitude": 4.7, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 601, "Type": "regular", "Route": "CONFLITO_D1", "DepartureDate": "2026-06-15", "DepartureTime": "09:00",
+      "Leg": [{ "Departure": "LHR", "Arrival": "FCO", "Fuel": { "Quantity": 13500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 51.5, "Longitude": -0.4, "Altitude": { "Quantity": 25, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 41.8, "Longitude": 12.2, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 602, "Type": "regular", "Route": "CONFLITO_D2", "DepartureDate": "2026-06-15", "DepartureTime": "09:01",
+      "Leg": [{ "Departure": "LHR", "Arrival": "FCO", "Fuel": { "Quantity": 13500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 51.5, "Longitude": -0.4, "Altitude": { "Quantity": 25, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 41.8, "Longitude": 12.2, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 603, "Type": "regular", "Route": "CONFLITO_D3", "DepartureDate": "2026-06-15", "DepartureTime": "09:02",
+      "Leg": [{ "Departure": "LHR", "Arrival": "FCO", "Fuel": { "Quantity": 13500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 51.5, "Longitude": -0.4, "Altitude": { "Quantity": 25, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 41.8, "Longitude": 12.2, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 604, "Type": "regular", "Route": "CONFLITO_D4", "DepartureDate": "2026-06-15", "DepartureTime": "09:03",
+      "Leg": [{ "Departure": "LHR", "Arrival": "FCO", "Fuel": { "Quantity": 13500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 51.5, "Longitude": -0.4, "Altitude": { "Quantity": 25, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 41.8, "Longitude": 12.2, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 605, "Type": "regular", "Route": "CONFLITO_D5", "DepartureDate": "2026-06-15", "DepartureTime": "09:04",
+      "Leg": [{ "Departure": "LHR", "Arrival": "FCO", "Fuel": { "Quantity": 13500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 51.5, "Longitude": -0.4, "Altitude": { "Quantity": 25, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 41.8, "Longitude": 12.2, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 606, "Type": "regular", "Route": "CONFLITO_D6", "DepartureDate": "2026-06-15", "DepartureTime": "09:05",
+      "Leg": [{ "Departure": "LHR", "Arrival": "FCO", "Fuel": { "Quantity": 13500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 51.5, "Longitude": -0.4, "Altitude": { "Quantity": 25, "Unit": "m" } }, "End": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 49.0, "Longitude": 2.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 44.0, "Longitude": 8.0, "Altitude": { "Quantity": 10500, "Unit": "m" } }, "End": { "Latitude": 41.8, "Longitude": 12.2, "Altitude": { "Quantity": 4, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 701, "Type": "regular", "Route": "CONFLITO_E1", "DepartureDate": "2026-06-15", "DepartureTime": "14:15",
+      "Leg": [{ "Departure": "CDG", "Arrival": "VIE", "Fuel": { "Quantity": 11000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } }, "End": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.1, "Longitude": 16.5, "Altitude": { "Quantity": 183, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 702, "Type": "regular", "Route": "CONFLITO_E2", "DepartureDate": "2026-06-15", "DepartureTime": "14:16",
+      "Leg": [{ "Departure": "CDG", "Arrival": "VIE", "Fuel": { "Quantity": 11000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } }, "End": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.1, "Longitude": 16.5, "Altitude": { "Quantity": 183, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 703, "Type": "regular", "Route": "CONFLITO_E3", "DepartureDate": "2026-06-15", "DepartureTime": "14:17",
+      "Leg": [{ "Departure": "CDG", "Arrival": "VIE", "Fuel": { "Quantity": 11000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } }, "End": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.1, "Longitude": 16.5, "Altitude": { "Quantity": 183, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 704, "Type": "regular", "Route": "CONFLITO_E4", "DepartureDate": "2026-06-15", "DepartureTime": "14:18",
+      "Leg": [{ "Departure": "CDG", "Arrival": "VIE", "Fuel": { "Quantity": 11000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } }, "End": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.1, "Longitude": 16.5, "Altitude": { "Quantity": 183, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 705, "Type": "regular", "Route": "CONFLITO_E5", "DepartureDate": "2026-06-15", "DepartureTime": "14:19",
+      "Leg": [{ "Departure": "CDG", "Arrival": "VIE", "Fuel": { "Quantity": 11000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } }, "End": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.1, "Longitude": 16.5, "Altitude": { "Quantity": 183, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 706, "Type": "regular", "Route": "CONFLITO_E6", "DepartureDate": "2026-06-15", "DepartureTime": "14:20",
+      "Leg": [{ "Departure": "CDG", "Arrival": "VIE", "Fuel": { "Quantity": 11000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 49.0, "Longitude": 2.5, "Altitude": { "Quantity": 117, "Unit": "m" } }, "End": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 48.5, "Longitude": 6.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 48.2, "Longitude": 13.0, "Altitude": { "Quantity": 9500, "Unit": "m" } }, "End": { "Latitude": 48.1, "Longitude": 16.5, "Altitude": { "Quantity": 183, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 801, "Type": "regular", "Route": "CONFLITO_F1", "DepartureDate": "2026-06-15", "DepartureTime": "18:30",
+      "Leg": [{ "Departure": "BCN", "Arrival": "BRU", "Fuel": { "Quantity": 12500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.3, "Longitude": 2.1, "Altitude": { "Quantity": 6, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 50.9, "Longitude": 4.5, "Altitude": { "Quantity": 56, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 802, "Type": "regular", "Route": "CONFLITO_F2", "DepartureDate": "2026-06-15", "DepartureTime": "18:31",
+      "Leg": [{ "Departure": "BCN", "Arrival": "BRU", "Fuel": { "Quantity": 12500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.3, "Longitude": 2.1, "Altitude": { "Quantity": 6, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 50.9, "Longitude": 4.5, "Altitude": { "Quantity": 56, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 803, "Type": "regular", "Route": "CONFLITO_F3", "DepartureDate": "2026-06-15", "DepartureTime": "18:32",
+      "Leg": [{ "Departure": "BCN", "Arrival": "BRU", "Fuel": { "Quantity": 12500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.3, "Longitude": 2.1, "Altitude": { "Quantity": 6, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 50.9, "Longitude": 4.5, "Altitude": { "Quantity": 56, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 804, "Type": "regular", "Route": "CONFLITO_F4", "DepartureDate": "2026-06-15", "DepartureTime": "18:33",
+      "Leg": [{ "Departure": "BCN", "Arrival": "BRU", "Fuel": { "Quantity": 12500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.3, "Longitude": 2.1, "Altitude": { "Quantity": 6, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 50.9, "Longitude": 4.5, "Altitude": { "Quantity": 56, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 805, "Type": "regular", "Route": "CONFLITO_F5", "DepartureDate": "2026-06-15", "DepartureTime": "18:34",
+      "Leg": [{ "Departure": "BCN", "Arrival": "BRU", "Fuel": { "Quantity": 12500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.3, "Longitude": 2.1, "Altitude": { "Quantity": 6, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 50.9, "Longitude": 4.5, "Altitude": { "Quantity": 56, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 806, "Type": "regular", "Route": "CONFLITO_F6", "DepartureDate": "2026-06-15", "DepartureTime": "18:35",
+      "Leg": [{ "Departure": "BCN", "Arrival": "BRU", "Fuel": { "Quantity": 12500, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 41.3, "Longitude": 2.1, "Altitude": { "Quantity": 6, "Unit": "m" } }, "End": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 44.0, "Longitude": 3.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 49.5, "Longitude": 4.0, "Altitude": { "Quantity": 11500, "Unit": "m" } }, "End": { "Latitude": 50.9, "Longitude": 4.5, "Altitude": { "Quantity": 56, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 901, "Type": "regular", "Route": "CONFLITO_G1", "DepartureDate": "2026-06-15", "DepartureTime": "07:30",
+      "Leg": [{ "Departure": "ZRH", "Arrival": "CPH", "Fuel": { "Quantity": 10000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 47.4, "Longitude": 8.5, "Altitude": { "Quantity": 432, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 55.6, "Longitude": 12.6, "Altitude": { "Quantity": 5, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 902, "Type": "regular", "Route": "CONFLITO_G2", "DepartureDate": "2026-06-15", "DepartureTime": "07:31",
+      "Leg": [{ "Departure": "ZRH", "Arrival": "CPH", "Fuel": { "Quantity": 10000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 47.4, "Longitude": 8.5, "Altitude": { "Quantity": 432, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 55.6, "Longitude": 12.6, "Altitude": { "Quantity": 5, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 903, "Type": "regular", "Route": "CONFLITO_G3", "DepartureDate": "2026-06-15", "DepartureTime": "07:32",
+      "Leg": [{ "Departure": "ZRH", "Arrival": "CPH", "Fuel": { "Quantity": 10000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 47.4, "Longitude": 8.5, "Altitude": { "Quantity": 432, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 55.6, "Longitude": 12.6, "Altitude": { "Quantity": 5, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 904, "Type": "regular", "Route": "CONFLITO_G4", "DepartureDate": "2026-06-15", "DepartureTime": "07:33",
+      "Leg": [{ "Departure": "ZRH", "Arrival": "CPH", "Fuel": { "Quantity": 10000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 47.4, "Longitude": 8.5, "Altitude": { "Quantity": 432, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 55.6, "Longitude": 12.6, "Altitude": { "Quantity": 5, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 905, "Type": "regular", "Route": "CONFLITO_G5", "DepartureDate": "2026-06-15", "DepartureTime": "07:34",
+      "Leg": [{ "Departure": "ZRH", "Arrival": "CPH", "Fuel": { "Quantity": 10000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 47.4, "Longitude": 8.5, "Altitude": { "Quantity": 432, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 55.6, "Longitude": 12.6, "Altitude": { "Quantity": 5, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 906, "Type": "regular", "Route": "CONFLITO_G6", "DepartureDate": "2026-06-15", "DepartureTime": "07:35",
+      "Leg": [{ "Departure": "ZRH", "Arrival": "CPH", "Fuel": { "Quantity": 10000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 47.4, "Longitude": 8.5, "Altitude": { "Quantity": 432, "Unit": "m" } }, "End": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 50.0, "Longitude": 9.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 54.0, "Longitude": 12.0, "Altitude": { "Quantity": 10000, "Unit": "m" } }, "End": { "Latitude": 55.6, "Longitude": 12.6, "Altitude": { "Quantity": 5, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 1001, "Type": "regular", "Route": "CONFLITO_H1", "DepartureDate": "2026-06-15", "DepartureTime": "21:00",
+      "Leg": [{ "Departure": "MAD", "Arrival": "LIS", "Fuel": { "Quantity": 6000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 1002, "Type": "regular", "Route": "CONFLITO_H2", "DepartureDate": "2026-06-15", "DepartureTime": "21:01",
+      "Leg": [{ "Departure": "MAD", "Arrival": "LIS", "Fuel": { "Quantity": 6000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 1003, "Type": "regular", "Route": "CONFLITO_H3", "DepartureDate": "2026-06-15", "DepartureTime": "21:02",
+      "Leg": [{ "Departure": "MAD", "Arrival": "LIS", "Fuel": { "Quantity": 6000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 1004, "Type": "regular", "Route": "CONFLITO_H4", "DepartureDate": "2026-06-15", "DepartureTime": "21:03",
+      "Leg": [{ "Departure": "MAD", "Arrival": "LIS", "Fuel": { "Quantity": 6000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 1005, "Type": "regular", "Route": "CONFLITO_H5", "DepartureDate": "2026-06-15", "DepartureTime": "21:04",
+      "Leg": [{ "Departure": "MAD", "Arrival": "LIS", "Fuel": { "Quantity": 6000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } } }
+        ]
+      }]
+    },
+    {
+      "ID": 1006, "Type": "regular", "Route": "CONFLITO_H6", "DepartureDate": "2026-06-15", "DepartureTime": "21:05",
+      "Leg": [{ "Departure": "MAD", "Arrival": "LIS", "Fuel": { "Quantity": 6000, "Unit": "kg" },
+        "Segments": [
+          { "Mode": "climb", "Start": { "Latitude": 40.4, "Longitude": -3.7, "Altitude": { "Quantity": 609, "Unit": "m" } }, "End": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "cruise", "Start": { "Latitude": 39.5, "Longitude": -6.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } } },
+          { "Mode": "descend", "Start": { "Latitude": 39.0, "Longitude": -8.0, "Altitude": { "Quantity": 8000, "Unit": "m" } }, "End": { "Latitude": 38.7, "Longitude": -9.1, "Altitude": { "Quantity": 100, "Unit": "m" } } }
+        ]
+      }]
+    }
+  ]
+}

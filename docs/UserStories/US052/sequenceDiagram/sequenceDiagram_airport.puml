@@ -1,0 +1,92 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "RegisterAirportUI" as UI <<presentation>>
+participant "RegisterAirportController" as Controller <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "AirControlAreaRepository" as AreaRepo <<persistence>>
+database "AirportRepository" as AirportRepo <<persistence>>
+participant "AirControlArea" as ACA <<domain>>
+participant "Airport" as Airport <<domain>>
+
+activate User
+User -> UI : register airport
+activate UI
+
+UI -> User : ask IATA (loop until valid)
+User -> UI : iata
+
+UI -> User : ask ICAO (loop until valid)
+User -> UI : icao
+
+UI -> User : ask airport data
+User -> UI : data
+
+UI -> RepoFac : list AirControlAreas()
+RepoFac -> AreaRepo : findAll()
+AreaRepo --> UI : areas
+
+UI -> User : selects area
+
+UI -> User : asks coordinates (loop until valid)
+User -> UI : lat/lon
+
+UI -> Controller : registerAirport(...)
+
+activate Controller
+
+Controller -> RepoFac : airports()
+RepoFac --> Controller : AirportRepo
+
+Controller -> RepoFac : airControlAreas()
+RepoFac --> Controller : AreaRepo
+
+Controller -> AirportRepo : existsByIataCode(iata)
+AirportRepo --> Controller : boolean
+
+Controller -> AirportRepo : existsByIcaoCode(icao)
+AirportRepo --> Controller : boolean
+
+alt codes exist
+    Controller --> UI : error "IATA/ICAO already exists"
+else codes ok
+
+    Controller -> AreaRepo : findByAreaCode(areaCode)
+    AreaRepo --> Controller : ACA
+
+    Controller -> AirportRepo : existsByCoordinate(coord)
+    AirportRepo --> Controller : boolean
+
+    alt coordinate exists
+        Controller --> UI : error "Airport already exists at coordinates"
+    else coordinate free
+
+        Controller -> ACA : geoBoundary.contains(coord)
+        ACA --> Controller : boolean
+
+        alt outside area
+            Controller --> UI : error "Outside Air Control Area"
+        else inside area
+
+            Controller -> Airport : new Airport(...)
+            Airport --> Controller : airport
+
+            Controller -> AirportRepo : save(airport)
+            AirportRepo --> Controller : saved
+
+            Controller --> UI : success
+        end
+    end
+end
+
+deactivate Controller
+UI --> User : result
+deactivate UI
+deactivate User
+
+@enduml

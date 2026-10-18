@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AISafe – Remote Access Logs</title>
+    <script src="logging.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 20px; }
+        h1   { color: #333; }
+        nav a { margin-right: 16px; font-weight: bold; text-decoration: none; color: #0066cc; }
+        nav a:hover { text-decoration: underline; }
+        #content { margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; background: white; }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+        th { background: #0066cc; color: white; }
+        tr:nth-child(even) { background: #f0f0f0; }
+        .LOGIN_OK   { color: green;  font-weight: bold; }
+        .LOGIN_FAIL { color: red;    font-weight: bold; }
+        .LOGOUT     { color: orange; font-weight: bold; }
+        .DISCONNECT { color: gray;   font-weight: bold; }
+        #status { font-size: 0.85em; color: #666; margin-top: 8px; }
+    </style>
+</head>
+<body onload="init()">
+<h1>AISafe – Remote Accesses Logging Server</h1>
+<nav>
+    <a href="#" onclick="showPage('events')">📋 Last Events</a>
+    <a href="#" onclick="showPage('active')">🟢 Active Users</a>
+</nav>
+<div id="content">Loading...</div>
+<div id="status"></div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Air Transport Company\nCollaborator" as Actor
+participant ":FlightRouteUI" as UI <<presentation>>
+participant ":FlightRouteController" as Ctrl <<application>>
+database ":FlightRouteRepository" as Repo <<repository>>
+participant "newRoute:FlightRoute" as Domain <<domain>>
+
+Actor -> UI : createRoute(companyIata, routeNumber, originId, destinationId)
+activate UI
+    UI -> Ctrl : registerNewRoute(companyIata, routeNumber, originId, destinationId)
+    activate Ctrl
+
+        ' Validação de Unicidade Global (Invariante de Identidade)
+        Ctrl -> Repo : existsByName(companyIata, routeNumber)
+        note right of Repo: **Enforced Invariant:**\nName must be unique
+        activate Repo
+            Repo --> Ctrl : true / false
+        deactivate Repo
+
+        alt route name is unique
+            ' Criação da Instância e Validação de Invariantes Locais
+            Ctrl -> Domain** : create(companyIata, routeNumber, originId, destinationId)
+            activate Domain
+                Domain -> Domain : validateNameFormat(companyIata, routeNumber)
+                note right of Domain: **Enforced Invariant:**\nExactly 2 letters + 1-4 digits
+
+                Domain -> Domain : validateDistinctAirports(originId, destinationId)
+                note right of Domain: **Enforced Invariant:**\nOrigin != Destination
+
+                Domain --> Ctrl : routeInstance
+            deactivate Domain
+
+            ' Persistência via JPA
+            Ctrl -> Repo : save(newRoute)
+            activate Repo
+                Repo --> Ctrl : success
+            deactivate Repo
+
+            Ctrl --> UI : success message
+        else route name already exists
+            Ctrl --> UI : error: "Route name already in use"
+        end
+
+    deactivate Ctrl
+    UI --> Actor : display result
+deactivate UI
+
+@enduml

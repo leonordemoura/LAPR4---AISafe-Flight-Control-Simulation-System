@@ -1,0 +1,93 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as Actor
+
+participant ":ListPilotRosterUI" as UI <<presentation>>
+participant ":ListPilotRosterController" as Ctrl <<application>>
+participant ":AuthorizationService" as Authz <<service>>
+
+database ":RepositoryFactory" as RepoFac <<repository>>
+database ":TransactionalContext" as Tx <<persistence>>
+
+database ":PilotCertificationRepository" as PilotRepo <<repository>>
+database ":AirTransportCompanyRepository" as CompanyRepo <<repository>>
+
+participant "company:AirTransportCompany" as Company <<domain>>
+participant "pilot:PilotCertification" as Pilot <<domain>>
+
+Actor -> UI : request pilot roster
+activate UI
+
+UI -> Ctrl : listRoster()
+activate Ctrl
+
+' =====================================================
+' AUTHORIZATION
+' =====================================================
+Ctrl -> Authz : ensureAuthenticatedUserHasAnyOf(ATCC)
+activate Authz
+Authz --> Ctrl : authorized
+deactivate Authz
+
+Ctrl -> Authz : session()
+activate Authz
+Authz --> Ctrl : SystemUser
+deactivate Authz
+
+Ctrl -> Ctrl : extract collaboratorEmail (Email VO)
+
+' =====================================================
+' REPOSITORIES
+' =====================================================
+Ctrl -> RepoFac : newTransactionalContext()
+activate RepoFac
+RepoFac --> Ctrl : Tx
+deactivate RepoFac
+
+Ctrl -> RepoFac : pilots(Tx)
+activate RepoFac
+RepoFac --> Ctrl : PilotRepo
+deactivate RepoFac
+
+Ctrl -> RepoFac : getAirTransportCompanyRepository(Tx)
+activate RepoFac
+RepoFac --> Ctrl : CompanyRepo
+deactivate RepoFac
+
+' =====================================================
+' COMPANY RESOLUTION
+' =====================================================
+Ctrl -> CompanyRepo : findByCollaboratorEmail(email)
+activate CompanyRepo
+CompanyRepo --> Ctrl : company
+deactivate CompanyRepo
+
+' =====================================================
+' DOMAIN QUERY
+' =====================================================
+Ctrl -> PilotRepo : findByCompany(company)
+activate PilotRepo
+PilotRepo --> Ctrl : List<PilotCertification>
+deactivate PilotRepo
+
+' =====================================================
+' DTO MAPPING (internal step in controller)
+' =====================================================
+loop for each PilotCertification
+
+    Ctrl -> Ctrl : map PilotCertification -> PilotRosterDTO
+    Ctrl -> Pilot : certifications()
+    Ctrl -> Pilot : userEmail(), identity(), isActive()
+
+end
+
+Ctrl --> UI : List<PilotRosterDTO>
+deactivate Ctrl
+
+UI -> Actor : display pilot roster
+deactivate UI
+
+@enduml

@@ -1,0 +1,54 @@
+@startuml "registerAirport_SD"
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "AirportUI" as UI <<presentation>>
+participant "AirportController" as Controller <<application>>
+database "AirportRepository" as Repo <<repository>>
+participant "Airport\n<<Aggregate Root>>" as Airport <<domain>>
+
+activate User
+
+    User -> UI : requests to create an airport
+    activate UI
+        UI --> User : asks for airport details
+        User -> UI : enters airport details (name, town, country, iataCode, icaoCode, coordinates, elevation)
+
+        UI -> Controller : registerAirport(name, town, country, iataCode, icaoCode, coordinates, elevation)
+        activate Controller
+
+            Controller -> Repo : existsByIataOrIcao(iataCode, icaoCode)
+            activate Repo
+                Repo --> Controller : true / false
+            deactivate Repo
+
+            alt codes are unique
+                Controller -> Airport : create(name, town, country, iataCode, icaoCode, coordinates, elevation)
+                Note right of Airport: **Enforced Invariant**\n- IATA and ICAO codes must be unique
+                activate Airport
+                    Airport --> Controller : airport
+                deactivate Airport
+
+                Controller -> Repo : save(airport)
+                activate Repo
+                    Repo --> Controller : success
+                deactivate Repo
+
+                Controller --> UI : success message
+            else codes already exist
+                Controller --> UI : error message indicating codes already exist
+            end
+
+        deactivate Controller
+
+        UI --> User : displays message
+    deactivate UI
+
+deactivate User
+
+@enduml

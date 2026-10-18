@@ -1,0 +1,109 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam classAttributeIconSize 0
+
+package "aisafe" {
+
+    package "app" {
+        package "backoffice" {
+            package "console" {
+
+                class RegisterAirportUI <<presentation>> {
+                    - controller : RegisterAirportController
+                    + doShow() : boolean
+                }
+
+            }
+        }
+    }
+
+    package "core" {
+
+        class RegisterAirportController <<controller>> {
+            - factory : RepositoryFactory
+            + registerAirport(iata, icao, name, town, country, elevation, lat, lon, areaID) : boolean
+        }
+
+        package "Airport Aggregate" {
+
+            class Airport <<entity>> <<aggregateRoot>>
+
+            class IataCode_Airport <<vo>> {
+                - code : String
+            }
+
+            class IcaoCode_Airport <<vo>> {
+                - code : String
+            }
+
+            class AirportName <<vo>> {
+                - value : String
+            }
+
+            class Elevation <<vo>> {
+                - meters : Double
+            }
+
+            class Coordinate_Airport <<vo>> {
+                - latitude : Double
+                - longitude : Double
+            }
+
+            class Town <<vo>> {
+            - name : String
+            }
+
+            class Country_Airport <<vo>> {
+                - name : String
+                - code : String
+            }
+
+        }
+
+        package "AirControlArea Aggregate" {
+
+            class AirControlArea <<entity>> <<aggregateRoot>>
+
+            class AreaCode <<vo>>
+
+        }
+
+        interface AirportRepository <<repository>> {
+            +save(airport)
+            +findByIata(code)
+        }
+
+        interface AirControlAreaRepository <<repository>> {
+            +findById(id)
+        }
+
+    }
+
+    ' ── UI → Controller ─────────────────────────────
+    RegisterAirportUI ..> RegisterAirportController : uses >
+
+    ' ── Controller dependencies ────────────────────
+    RegisterAirportController ..> AirportRepository : uses >
+    RegisterAirportController ..> AirControlAreaRepository : uses >
+    RegisterAirportController ..> Airport : creates >
+
+    ' ── Repository manages aggregate ───────────────
+    AirportRepository ..> Airport : persists >
+    AirControlAreaRepository ..> AirControlArea : persists >
+
+    ' ── Airport aggregate relationships ────────────
+    Airport "1" *-- "1" IataCode_Airport : identified by >
+    Airport "1" *-- "1" IcaoCode_Airport : identified by >
+    Airport "1" *-- "1" AirportName : named >
+    Airport "1" *-- "1" Elevation : elevation >
+    Airport "1" *-- "1" Coordinate_Airport : located at >
+    Airport "1" *-- "1" Town : located in >
+    Airport "1" *-- "1" Country_Airport : belongs to >
+
+    ' ── Area relationships ─────────────────────────
+    Airport "0..*" --> "1" AirControlArea : belongs to >
+    AirControlArea "1" *-- "1" AreaCode : identified by >
+
+}
+
+@enduml

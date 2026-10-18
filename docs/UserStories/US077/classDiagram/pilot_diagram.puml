@@ -1,0 +1,131 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+package "aisafe" {
+
+    package "app" {
+        package "airtransportcompany.console" {
+
+            class RemovePilotUI <<presentation>> {
+                - controller : RemovePilotController
+                + doShow() : boolean
+            }
+        }
+    }
+
+    package "core" {
+
+        class RemovePilotController <<controller>> {
+            - authz : AuthorizationService
+            - factory : RepositoryFactory
+            - service : RemovePilotService
+            + deactivatePilot(pilotId)
+        }
+
+        class RemovePilotService <<service>> {
+            - factory : RepositoryFactory
+            + deactivatePilot(id, collaboratorEmail)
+        }
+
+        class PersistenceContext <<service>> {
+            {static} + repositories() : RepositoryFactory
+        }
+
+        interface RepositoryFactory <<factory>> {
+            + pilots()
+            + flights()
+            + getAirTransportCompanyRepository()
+            + newTransactionalContext()
+        }
+
+        interface PilotCertificationRepository <<repository>>
+        interface AirTransportCompanyRepository <<repository>>
+        interface FlightRepository <<repository>>
+
+        package "PilotCertification Aggregate" {
+
+            class PilotCertification <<entity>> <<aggregateRoot>> {
+                - pilotId : PilotID
+                - userEmail : Email
+                - company : AirTransportCompany
+                - active : boolean
+                - certifications : Set<ModelCertification>
+
+                + deactivate()
+                + isActive() : boolean
+            }
+
+            class ModelCertification <<vo>> {
+                - aircraftModelId : AircraftModelId
+                - certificationDate : LocalDate
+            }
+
+            class PilotID <<vo>>
+        }
+
+        package "Flight Aggregate" {
+
+            class Flight <<entity>> <<aggregateRoot>> {
+                - flightPlans : List<FlightPlan>
+            }
+
+            class FlightPlan <<entity>> {
+                - pilotId : PilotID
+                - status : FlightPlanStatus
+
+                + isActive() : boolean
+                + isPending() : boolean
+            }
+
+            enum FlightPlanStatus {
+                DRAFT
+                VALIDATED
+                ACTIVE
+                CANCELLED
+            }
+        }
+
+        package "AirTransportCompany Aggregate" {
+            class AirTransportCompany <<entity>> <<aggregateRoot>>
+        }
+
+        package "User Aggregate" {
+            class Email <<vo>>
+        }
+    }
+
+    ' ================= UI FLOW =================
+    RemovePilotUI ..> RemovePilotController
+
+    ' ================= CONTROLLER =================
+    RemovePilotController ..> AuthorizationService
+    RemovePilotController ..> RemovePilotService
+    RemovePilotController ..> PersistenceContext
+
+    ' ================= SERVICE =================
+    RemovePilotService ..> RepositoryFactory
+
+    ' ================= REPOSITORIES =================
+    RepositoryFactory ..> PilotCertificationRepository
+    RepositoryFactory ..> AirTransportCompanyRepository
+    RepositoryFactory ..> FlightRepository
+
+    ' ================= DOMAIN DEPENDENCIES =================
+    PilotCertificationRepository ..> PilotCertification
+    AirTransportCompanyRepository ..> AirTransportCompany
+    FlightRepository ..> Flight
+
+    ' ================= DOMAIN RELATIONS =================
+    PilotCertification "1" *-- "1..*" ModelCertification
+    PilotCertification "1" *-- "1" PilotID
+    PilotCertification "1" --> "1" AirTransportCompany
+    PilotCertification --> Email
+
+    Flight "1" *-- "0..*" FlightPlan
+    FlightPlan --> PilotID
+    FlightPlan --> FlightPlanStatus
+
+}
+@enduml

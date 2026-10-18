@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>aiSafe</groupId>
+    <artifactId>project</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <antlr.version>4.13.2</antlr.version>
+        <junit.version>5.10.2</junit.version>
+        <mockito.version>5.14.2</mockito.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
+        <jacoco.version>0.8.12</jacoco.version>
+        <eclipselink.version>5.0.0-B03</eclipselink.version>
+        <h2.version>2.3.232</h2.version>
+        <postgresql.version>42.7.3</postgresql.version>
+        <eapli.framework.core.version>25.0.0-RELEASE</eapli.framework.core.version>
+        <eapli.framework.authz.version>25.0.0-RELEASE</eapli.framework.authz.version>
+        <eapli.framework.pubsub.version>25.0.0-RELEASE</eapli.framework.pubsub.version>
+    </properties>
+
+    <modules>
+        <module>aisafe.infrastructure.application</module>
+        <module>aisafe.core</module>
+        <module>aisafe.persistence.impl</module>
+        <module>aisafe.bootstrappers</module>
+        <module>aisafe.app.bootstrap</module>
+        <module>aisafe.app.backoffice.console</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.bitbucket.pag_isep.eapliframework</groupId>
+                <artifactId>eapli.framework.core</artifactId>
+                <version>${eapli.framework.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bitbucket.pag_isep.eapliframework</groupId>
+                <artifactId>eapli.framework.infrastructure.authz</artifactId>
+                <version>${eapli.framework.authz.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bitbucket.pag_isep.eapliframework</groupId>
+                <artifactId>eapli.framework.infrastructure.pubsub</artifactId>
+                <version>${eapli.framework.pubsub.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>4.13.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>org.eclipse.persistence.jpa</artifactId>
+                <version>5.0.0-B03</version>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>2.3.232</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>5.10.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>${pdfbox.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                    <configuration>
+                        <argLine>
+                            -javaagent:"${settings.localRepository}/org/mockito/mockito-core/5.14.2/mockito-core-5.14.2.jar"
+                            -Xshare:off
+                        </argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <descriptorRefs>
+                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                        </descriptorRefs>
+                        <archive>
+                            <manifest>
+                                <mainClass>aiSafe.app.backoffice.console.MainApp</mainClass>
+                            </manifest>
+                        </archive>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                    </configuration>
+                </plugin>
+                <!-- ANTLR plugin for code generation -->
+                <plugin>
+                    <groupId>org.antlr</groupId>
+                    <artifactId>antlr4-maven-plugin</artifactId>
+                    <version>4.13.2</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>antlr4</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <visitor>true</visitor>
+                        <listener>true</listener>
+                    </configuration>
+                </plugin>
+
+                <!-- Plugion Jacoco for code coverage -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                </plugin>
+
+                <!-- javadoc -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                    <configuration>
+                        <!-- UML Taglet JDK 8 -->
+                        <!-- <source>1.8</source>
+                        <javadocVersion>1.8.0</javadocVersion>
+                        <taglet>org.jdrupes.taglets.plantUml.Taglet</taglet>
+                            <tagletArtifact> <groupId>org.jdrupes.taglets</groupId>
+                        <artifactId>plantuml-taglet</artifactId>
+                            <version>1.0.5</version> </tagletArtifact> -->
+
+                        <!-- UML DocLet JDK 9+ -->
+                        <doclet>nl.talsmasoftware.umldoclet.UMLDoclet</doclet>
+                        <docletArtifact>
+                            <groupId>nl.talsmasoftware</groupId>
+                            <artifactId>umldoclet</artifactId>
+                            <version>2.0.12</version>
+                        </docletArtifact>
+
+                        <!-- params -->
+                        <show>private</show>
+                        <doclint>none</doclint>
+                        <detectOfflineLinks>false</detectOfflineLinks>
+                        <additionalOptions>
+                            <additionalOption>-Xdoclint:none</additionalOption>
+                            <!-- Specify each diagram option here as an
+                            additionOption tag. -->
+                        </additionalOptions>
+                        <additionalJOption>-Xdoclint:none</additionalJOption>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Surefire Report - disable XRef linking -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-report-plugin</artifactId>
+                    <version>3.5.5</version>
+                    <configuration>
+                        <linkXRef>false</linkXRef>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+</project>

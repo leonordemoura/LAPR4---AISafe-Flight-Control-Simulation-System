@@ -1,0 +1,251 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide empty methods
+
+package "aisafe.core" {
+
+    class SimulationReport <<entity>> <<aggregateRoot>> {
+        + attachFilePath(path : ReportFilePath) : void
+        + filePath() : ReportFilePath
+        + validationStatus() : ValidationStatus
+        + flightHistories() : List<FlightHistorySnapshot>
+        + flightExecutionStatuses() : List<FlightExecutionStatus>
+        + safetyViolations() : List<SafetyViolation>
+        + relatedFlightDesignator() : String
+    }
+
+    class ReportDate <<vo>> {
+        - generatedAt : LocalDateTime
+    }
+
+    class TotalFlights <<vo>> {
+        - value : int
+    }
+
+    class TotalViolations <<vo>> {
+        - value : int
+    }
+
+    class ViolationThreshold <<vo>> {
+        - value : int
+    }
+
+    class ReportFilePath <<vo>> {
+        - value : String
+    }
+
+    class FlightHistorySnapshot <<vo>> {
+        - flightId : int
+        - points : List<HistoryPoint>
+    }
+
+    class HistoryPoint <<vo>> {
+        - timestamp : SimulationTimestamp
+        - position : Position
+        - altitude : double
+    }
+
+    class FlightExecutionStatus <<vo>> {
+        - flightId : int
+        - violationCount : int
+        - performance : Double
+        - summaryMessage : String
+    }
+
+    class SafetyViolation <<vo>> {
+        - horizontalDistance : double
+        - verticalDistance : double
+    }
+
+    class FlightViolationState <<vo>> {
+        - flightId : int
+        - altitude : double
+    }
+
+    class Position <<vo>> {
+        - x : double
+        - y : double
+    }
+
+    class VelocityVector <<vo>> {
+        - vx : double
+        - vy : double
+        - vz : double
+    }
+
+    class SimulationTimestamp <<vo>> {
+        - minutesSinceMidnight : int
+    }
+
+    enum ValidationStatus <<enum>> {
+        SUCCEEDED
+        FAILED
+        ABORTED
+    }
+
+    interface SimulationReportRepository <<interface>> {
+        + save(report : SimulationReport) : SimulationReport
+        + findLatestByFlightDesignator(designator : String) : Optional<SimulationReport>
+    }
+
+    interface RepositoryFactory <<interface>> {
+        + newTransactionalContext() : TransactionalContext
+        + simulationReports(tx : TransactionalContext) : SimulationReportRepository
+    }
+
+    class SimulationRunResultDTO <<dto>> {
+        + totalFlights : int
+        + totalViolations : int
+        + violationThreshold : int
+        + earlyStop : boolean
+        + validationFailure : boolean
+        + validationMessage : String
+        + relatedFlightDesignator : String
+        + flightHistories : List<FlightHistorySnapshotDTO>
+        + flightStatuses : List<FlightExecutionStatusDTO>
+        + violationEvents : List<SafetyViolationEventDTO>
+    }
+
+    class FlightHistorySnapshotDTO <<dto>> {
+        + flightId : int
+        + points : List<HistoryPointDTO>
+    }
+
+    class HistoryPointDTO <<dto>> {
+        + minutesSinceMidnight : int
+        + x : double
+        + y : double
+        + altitude : double
+    }
+
+    class FlightExecutionStatusDTO <<dto>> {
+        + flightId : int
+        + violationCount : int
+        + performance : Double
+        + summaryMessage : String
+    }
+
+    class SafetyViolationEventDTO <<dto>> {
+        + flightAId : int
+        + flightBId : int
+        + horizontalDistance : double
+        + verticalDistance : double
+        + positions and velocities per flight
+    }
+
+    class ScompSimulationResultAdapter <<adapter>> {
+        + loadSimulationResult(simulationLogPath : String) : SimulationRunResultDTO
+        - parseReportContent(content : String) : SimulationRunResultDTO
+    }
+
+    class SimulationReportTextFormatter <<applicationService>> {
+        + {static} format(report : SimulationReport) : String
+    }
+
+    class SimulationReportFileWriter <<applicationService>> {
+        + write(reportContent : String, outputDirectory : String) : ReportFilePath
+    }
+
+    class GenerateSimulationReportService <<applicationService>> {
+        - repositories : RepositoryFactory
+        - simulationResultAdapter : ScompSimulationResultAdapter
+        - fileWriter : SimulationReportFileWriter
+        + generateReport(outputDirectory : String,\n  simulationLogPath : String, tx) : SimulationReport
+        - buildAggregate(dto : SimulationRunResultDTO) : SimulationReport
+        - resolveValidationStatus(dto) : ValidationStatus
+    }
+
+    class GenerateSimulationReportController <<useCaseController>> {
+        - repositoryFactory : RepositoryFactory
+        - generateSimulationReportService : GenerateSimulationReportService
+        + generateReport(outputDirectory : String,\n  simulationLogPath : String) : SimulationReport
+    }
+
+    ' DOMAIN RELATIONSHIPS
+    SimulationReport "1" *-- "1" ReportDate
+    SimulationReport "1" *-- "1" TotalFlights
+    SimulationReport "1" *-- "1" TotalViolations
+    SimulationReport "1" *-- "1" ViolationThreshold
+    SimulationReport "1" *-- "0..1" ReportFilePath
+    SimulationReport "1" *-- "0..*" FlightHistorySnapshot
+    SimulationReport "1" *-- "0..*" FlightExecutionStatus
+    SimulationReport "1" *-- "0..*" SafetyViolation
+    SimulationReport --> ValidationStatus
+
+    FlightHistorySnapshot "1" *-- "1..*" HistoryPoint
+    HistoryPoint "1" *-- "1" SimulationTimestamp
+    HistoryPoint "1" *-- "1" Position
+
+    SafetyViolation "1" *-- "2" FlightViolationState
+    FlightViolationState "1" *-- "1" Position
+    FlightViolationState "1" *-- "0..1" VelocityVector
+    FlightViolationState "1" *-- "1" SimulationTimestamp
+
+    ' DTO COMPOSITION (adapter output — not persisted)
+    SimulationRunResultDTO *-- "0..*" FlightHistorySnapshotDTO
+    SimulationRunResultDTO *-- "0..*" FlightExecutionStatusDTO
+    SimulationRunResultDTO *-- "0..*" SafetyViolationEventDTO
+    FlightHistorySnapshotDTO *-- "1..*" HistoryPointDTO
+
+    ' REPOSITORY RETURNS
+    SimulationReportRepository ..> SimulationReport : returns >
+
+    ' APPLICATION DEPENDENCIES
+    GenerateSimulationReportController ..> GenerateSimulationReportService : delegates to >
+
+    GenerateSimulationReportService ..> RepositoryFactory : uses >
+    GenerateSimulationReportService ..> ScompSimulationResultAdapter : loadSimulationResult >
+    GenerateSimulationReportService ..> SimulationReportTextFormatter : format report >
+    GenerateSimulationReportService ..> SimulationReportFileWriter : write file >
+    GenerateSimulationReportService ..> SimulationReportRepository : save >
+    GenerateSimulationReportService ..> SimulationReport : buildAggregate >
+    GenerateSimulationReportService ..> SimulationRunResultDTO : uses >
+
+    ScompSimulationResultAdapter ..> SimulationRunResultDTO : returns >
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class GenerateSimulationReportAction <<action>> {
+        + execute()
+    }
+
+    class GenerateSimulationReportUI {
+        + show() : boolean
+    }
+
+    GenerateSimulationReportAction ..> GenerateSimulationReportUI
+    GenerateSimulationReportUI ..> GenerateSimulationReportController : uses >
+}
+
+note right of GenerateSimulationReportController
+  Constructor: PersistenceContext.repositories()
+  → AppSettings → RepositoryFactory (see SD).
+  ensureAuthenticatedFlightControlOperator()
+  (role FLIGHT_CONTROL_OPERATOR).
+  Creates GenerateSimulationReportService(repositoryFactory).
+  Service constructor creates ScompSimulationResultAdapter
+  and SimulationReportFileWriter (not the controller).
+end note
+
+note right of GenerateSimulationReportService
+  generateReport:
+  adapter → buildAggregate(dto) → format → write file
+  → attachFilePath → simulationReports(tx).save(report)
+
+  buildAggregate maps:
+  FlightHistorySnapshotDTO → FlightHistorySnapshot
+  FlightExecutionStatusDTO → FlightExecutionStatus
+  SafetyViolationEventDTO → SafetyViolation
+end note
+
+note bottom of SimulationReport
+  JPA: embeddables + validationStatus + relatedFlightDesignator.
+  @Transient: flightHistories, flightExecutionStatuses,
+  safetyViolations (full body in report file — US111.1).
+  SCOMP reference: reportGeneration.c.
+end note
+
+@enduml

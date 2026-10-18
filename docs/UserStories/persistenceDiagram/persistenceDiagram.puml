@@ -1,0 +1,40 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+skinparam namespaceSeparator none
+
+    package "core.infrastructure.persistence" as coreInfra {
+        class PersistenceContext
+        interface RepositoryFactory
+    }
+
+    package "core.Xmanagement.repositories" as coreX {
+        interface XRepository
+    }
+
+    package "persistence.impl.inmemory" as mem {
+        class InMemoryRepositoryFactory
+        class InMemoryXRepository
+    }
+
+    package "persistence.impl.jpa" as jpa {
+        class JpaRepositoryFactory
+        class JpaXRepository
+    }
+
+    ' Relações
+    PersistenceContext ..> RepositoryFactory
+    PersistenceContext ..> JpaRepositoryFactory : <<RunTime>>
+    PersistenceContext ..> InMemoryRepositoryFactory : <<RunTime>>
+
+    JpaRepositoryFactory ..> JpaXRepository
+    InMemoryRepositoryFactory ..> InMemoryXRepository
+
+    JpaRepositoryFactory ..|> RepositoryFactory
+    InMemoryRepositoryFactory ..|> RepositoryFactory
+
+    JpaXRepository ..|> XRepository
+    InMemoryXRepository ..|> XRepository
+
+@enduml

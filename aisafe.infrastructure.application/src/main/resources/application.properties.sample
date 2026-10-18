@@ -1,0 +1,4 @@
+persistence.repositoryFactory=aiSafe.persistence.impl.jpa.JpaRepositoryFactory
+persistence.persistenceUnit=AI_SAFE
+jakarta.persistence.schema-generation.database.action=create
+ui.menu.layout=horizontal

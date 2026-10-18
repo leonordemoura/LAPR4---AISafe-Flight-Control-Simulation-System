@@ -1,0 +1,55 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as Actor
+participant ":AircraftModelUI" as UI <<presentation>>
+participant ":AircraftModelController" as Ctrl <<application>>
+database ":AircraftRepository" as AirRepo <<repository>>
+database ":AircraftModelRepository" as Repo <<repository>>
+participant "model:AircraftModel" as Domain <<domain>>
+
+Actor -> UI : removeEngine(modelID, engineID)
+activate UI
+    UI -> Ctrl : removeEngineCertification(modelID, engineID)
+    activate Ctrl
+
+        ' Requisito US058: Não pode remover se houver aviões a usar o modelo
+        Ctrl -> AirRepo : existsByModelID(modelID)
+        activate AirRepo
+            AirRepo --> Ctrl : true / false
+        deactivate AirRepo
+
+        alt no aircrafts are using this model
+            Ctrl -> Repo : findByID(modelID)
+            activate Repo
+                Repo --> Ctrl : model
+            deactivate Repo
+
+            Ctrl -> Domain : removeCertifiedEngine(engineID)
+            activate Domain
+                Domain -> Domain : canRemove = countCertifiedEngines() > 1
+                note right of Domain: **Enforced Invariant:**\nMust retain at least one engine
+
+                alt canRemove is true
+                    Domain -> Domain : remove(engineID)
+                    Domain --> Ctrl : success
+                else canRemove is false
+                    Domain --> Ctrl : throw InvariantViolationException
+                end
+            deactivate Domain
+
+            Ctrl -> Repo : save(model)
+            activate Repo
+                Repo --> Ctrl : success
+            deactivate Repo
+
+            Ctrl --> UI : success message
+        else aircrafts are using this model
+            Ctrl --> UI : error: "Cannot remove engine from model in use"
+        end
+    deactivate Ctrl
+    UI --> Actor : display result
+deactivate UI
+@enduml

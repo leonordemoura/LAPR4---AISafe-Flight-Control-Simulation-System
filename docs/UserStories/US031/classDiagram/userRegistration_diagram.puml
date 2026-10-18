@@ -1,0 +1,113 @@
+@startuml
+'https://plantuml.com/class-diagram
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+package "aisafe" {
+
+    package "app" {
+
+        package "backoffice" {
+
+            package "console" {
+
+                class RegisterUserUI <<presentation>> {
+                    - controller : RegisterUserController
+                    + doShow() : boolean
+                }
+
+            }
+        }
+    }
+
+    package "core" {
+
+        class RegisterUserController <<controller>> {
+            - factory : RepositoryFactory
+            + registerNewUser(firstName, lastName, email, role, phoneCode, phoneNumber, password) : User
+        }
+
+        interface UserRepository <<repository>>
+
+        package "User Aggregate" {
+
+            class User <<entity>> <<aggregateRoot>>
+
+            class SystemUser <<framework entity>>
+
+            class AisafeProfile <<entity>>
+
+            class SecurityClearance <<vo>> {
+                - expiryDate : Date
+            }
+
+            class SkillsAssessment <<vo>> {
+                - lastAssessmentDate : Date
+            }
+
+            class FullName <<vo>> {
+                - firstName : String
+                - lastName : String
+            }
+
+            class Email <<vo>> {
+                - emailAddress : String
+            }
+
+            class Email_Domains <<vo>> {
+                - domain : String
+            }
+
+            class PhoneNumber <<vo>> {
+                - code : Integer
+                - number : Integer
+            }
+
+            class Role <<framework vo>> {
+                - roleName : String
+            }
+
+            class AisafeRoles <<utility>> {
+                {static} ADMIN : Role
+                {static} BACKOFFICE_OPERATOR : Role
+                {static} WEATHER_PERSON : Role
+                {static} AIR_TRANSPORT_COMPANY_COLLABORATOR : Role
+                {static} PILOT : Role
+                {static} FLIGHT_CONTROL_OPERATOR : Role
+            }
+
+        }
+    }
+
+    ' ── UI → Controller ─────────────────────────────
+    RegisterUserUI ..> RegisterUserController : uses >
+
+    ' ── Controller dependencies ────────────────────
+    RegisterUserController ..> UserRepository : uses >
+    RegisterUserController ..> User : creates >
+    RegisterUserController ..> SystemUser : creates >
+
+    ' ── Repository manages aggregate ───────────────
+    UserRepository ..> User : persists >
+
+    ' ── Domain aggregate relationships ─────────────
+    User "1" *-- "1" FullName : named >
+    User "1" *-- "1" Email : identifies >
+    User "1" *-- "1" PhoneNumber : contact >
+    User "1" *-- "0..1" AisafeProfile : profile >
+
+    AisafeProfile "1" *-- "1" SecurityClearance
+    AisafeProfile "1" *-- "1" SkillsAssessment
+
+    Email "1" *-- "1" Email_Domains : belongs to >
+
+    ' ── Framework authentication relationships ─────
+    SystemUser "1" --> "*" Role : assigned >
+    SystemUser "1" --> "1" Email : username/email >
+
+    ' ── Utility dependencies ───────────────────────
+    AisafeRoles ..> Role
+
+}
+@enduml

@@ -1,0 +1,54 @@
+@startuml "registerAircraft_SD"
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Air Transport Company\nCollaborator" as User
+participant "AircraftUI" as UI <<presentation>>
+participant "AircraftController" as Controller <<application>>
+database "AircraftRepository" as Repo <<repository>>
+participant "Aircraft\n<<Aggregate Root>>" as Aircraft <<domain>>
+
+activate User
+
+    User -> UI : requests to register an aircraft
+    activate UI
+        UI --> User : asks for aircraft details
+        User -> UI : enters aircraft details (registration, companyId, aircraftModelId, country, cabinConfiguration, status)
+
+        UI -> Controller : registerAircraft(registration, companyId, aircraftModelId, country, cabinConfiguration, status)
+        activate Controller
+
+            Controller -> Repo : existsByRegistration(registration)
+            activate Repo
+                Repo --> Controller : true / false
+            deactivate Repo
+
+            alt registration is unique
+                Controller -> Aircraft : create(registration, companyId, aircraftModelId, country, cabinConfiguration, status)
+                Note right of Aircraft: **Enforced Invariants**\n- registration must be unique
+                activate Aircraft
+                    Aircraft --> Controller : aircraft
+                deactivate Aircraft
+
+                Controller -> Repo : save(aircraft)
+                activate Repo
+                    Repo --> Controller : success
+                deactivate Repo
+
+                Controller --> UI : success message
+            else registration already exists
+                Controller --> UI : error message indicating registration already exists
+            end
+
+        deactivate Controller
+
+        UI --> User : displays message
+    deactivate UI
+
+deactivate User
+
+@enduml

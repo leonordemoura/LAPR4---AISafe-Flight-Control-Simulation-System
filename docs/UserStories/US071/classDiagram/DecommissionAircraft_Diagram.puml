@@ -1,0 +1,79 @@
+@startuml
+
+package "aisafe.core" {
+
+    class Aircraft <<entity>> <<root>> {
+        - registration: AircraftRegistration
+        - status: AircraftStatus
+        + decommission(): void
+        + registration(): AircraftRegistration
+        + status(): AircraftStatus
+    }
+
+    class AircraftRegistration <<vo>> {
+        - value: String
+    }
+
+    enum AircraftStatus <<enum>> {
+        ACTIVE
+        DECOMMISSIONED
+    }
+
+    class Flight <<entity>> <<root>> {
+        - flightId: FlightId
+        - aircraftRegistration: AircraftRegistration
+        + isActiveOrPending(): boolean
+    }
+
+    class FlightPlan <<vo>> {
+        - status: FlightPlanStatus
+        + isPending(): boolean
+        + isActive(): boolean
+    }
+
+    enum FlightPlanStatus <<enum>> {
+        DRAFT
+        VALIDATED
+        ACTIVE
+    }
+
+    interface AircraftRepository <<interface>> {
+        + findByRegistration(registration: String): Optional<Aircraft>
+        + save(aircraft: Aircraft): Aircraft
+    }
+
+    interface FlightRepository <<interface>> {
+        + findByAircraftRegistration(registration: AircraftRegistration): List<Flight>
+    }
+
+    class DecommissionAircraftController <<application>> {
+        - aircraftRepository: AircraftRepository
+        - flightRepository: FlightRepository
+        + decommissionAircraft(registration: String): void
+    }
+
+    Aircraft "1" *-- "1" AircraftRegistration
+    Aircraft --> AircraftStatus
+
+    Flight "0..*" --> "1" AircraftRegistration : references >
+    Flight "1" *-- "1" FlightPlan
+    FlightPlan --> FlightPlanStatus
+
+    DecommissionAircraftController ..> AircraftRepository
+    DecommissionAircraftController ..> FlightRepository
+
+    AircraftRepository ..> Aircraft
+    FlightRepository ..> Flight
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class DecommissionAircraftUI <<presentation>> {
+        - controller: DecommissionAircraftController
+        + doShow(): boolean
+    }
+
+    DecommissionAircraftUI ..> DecommissionAircraftController
+}
+
+@enduml

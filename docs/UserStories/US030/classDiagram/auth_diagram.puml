@@ -1,0 +1,64 @@
+@startuml
+
+class AuthenticationService <<service>> {
+    + authenticate ()
+}
+
+class Role <<vo>>
+
+class AuthorizationService <<service>>
+
+class UserSession
+
+class SystemUser <<entity root>>
+
+class FullName <<vo>>{
+    - firstName: String
+    - lastName: String
+}
+
+class Email <<vo>>{
+    - emailAddress: String
+}
+
+class EmailDomain <<vo>>{
+    domain: String
+}
+
+class PhoneNumber <<vo>>{
+    - code : Integer
+    - number : Iteger
+}
+
+class Username <<vo>> <<id>>{
+    - username: String
+}
+
+class Password <<vo>>{
+   - password: String
+}
+
+class PasswordPolicy <<service>>
+
+class PasswordEncoder <<service>>
+
+' Relationships
+AuthenticationService ..> Role
+AuthenticationService ..> AuthorizationService
+AuthenticationService ..> Username
+AuthenticationService ..> Password
+AuthenticationService ..> PasswordPolicy
+AuthenticationService ..> PasswordEncoder
+
+AuthorizationService --> UserSession
+UserSession --> SystemUser
+SystemUser --> Username
+SystemUser --> Password
+SystemUser --> PhoneNumber
+SystemUser --> Email
+SystemUser --> FullName
+Email --> EmailDomain
+
+Password ..> PasswordPolicy
+Password ..> PasswordEncoder
+@enduml

@@ -1,0 +1,22 @@
+flight TP123 {
+    type REGULAR
+
+    leg {
+        departure OPO 2026-05-17 08:00
+        arrival LIS 2026-05-17 09:00
+
+        route {
+            origin OPO
+            destination LIS
+        }
+
+        segment {
+            start (41.242, -8.678)
+            end (41.242, -8.678)
+            altitude 12000 m
+            wind 180 deg 15 kt
+        }
+
+        fuel 5000 kg
+    }
+}

@@ -1,0 +1,54 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "backoffice" {
+    package "app"{
+        package "console" {
+            class ConsultWeatherDataUI <<presentation>>{
+                - controller: ConsultWeatherDataController
+                + doShow(): boolean
+            }
+        }
+    }
+}
+
+package "core"{
+    class ConsultWeatherDataController <<controller>>{
+        - authz : AuthorizationService
+        - service : ConsultWeatherDataService
+        + consultWeatherData(areaCode: String, date: LocalDate) : List<ConsultWeatherDataDTO>
+    }
+
+    class ConsultWeatherDataService <<service>>{
+        - weatherDataRepository : WeatherDataRepository
+        + consultWeatherData(areaCode: String, date: LocalDate) : List<ConsultWeatherDataDTO>
+    }
+
+    class ConsultWeatherDataDTO <<dto>>{
+        + areaCode : String
+        + observationStartDate : LocalDateTime
+        + observationEndDate : LocalDateTime
+        + windDirection : double
+        + windSpeed : double
+        + temperature : double
+        + pressure : double
+        + weatherSubArea : String
+    }
+
+    class WeatherData <<entity>> <<aggregateRoot>>
+
+    interface WeatherDataRepository <<repository>>
+
+    ' ── Repository relationships ─────────────────────
+    WeatherDataRepository ..> WeatherData : persists >
+
+    ' ── Architecture relationships ───────────────────
+    ConsultWeatherDataUI ..> ConsultWeatherDataController : uses >
+    ConsultWeatherDataController ..> ConsultWeatherDataService : uses >
+    ConsultWeatherDataController ..> ConsultWeatherDataDTO : uses >
+    ConsultWeatherDataService ..> WeatherDataRepository : uses >
+    ConsultWeatherDataService ..> WeatherData : reads >
+    ConsultWeatherDataService ..> ConsultWeatherDataDTO : creates >
+    ConsultWeatherDataUI ..> ConsultWeatherDataDTO : uses >
+}
+@enduml

@@ -1,0 +1,8 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.enabled": true,
+  "java.project.sourcePaths": [
+    "aisafe.core/src/main/java",
+    "aisafe.core/gen"
+  ]
+}

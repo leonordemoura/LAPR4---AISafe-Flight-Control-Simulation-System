@@ -1,0 +1,101 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+
+
+package "Aircraft Aggregate"{
+    class Aircraft <<entity>> <<root>> {
+    }
+
+    class AircraftRegistration <<vo>> {
+        value
+    }
+
+    class RegistrationYear <<vo>> {
+        value
+    }
+
+    class FlightCrewSize <<vo>> {
+        value
+    }
+
+    class Country <<vo>> {
+        code
+        name
+    }
+
+    class CabinConfiguration <<vo>> {
+        firstClassSeats
+        businessSeats
+        economySeats
+    }
+
+    enum AircraftStatus <<enum>> {
+        ACTIVE
+        DECOMMISSIONED
+    }
+
+    class currentEngine <<vo>> {
+        engineModelId
+    }
+
+    ' Relacionamentos Aircraft
+    Aircraft "1" *-- "1" AircraftRegistration
+    Aircraft "1" *-- "1..*" currentEngine : equipped with >
+    Aircraft "1" *-- "1" RegistrationYear : registered in >
+    Aircraft "1" *-- "1" FlightCrewSize
+    Aircraft "1" *-- "1" Country : registered in >
+    Aircraft "1" *-- "1" CabinConfiguration
+    Aircraft "1" --> "1" AircraftStatus : has >
+
+}
+
+package "AirTransportCompany Aggregate" {
+    class AirTransportCompany <<entity>> <<root>> {
+        }
+
+        class CompanyName <<vo>> {
+            value
+        }
+
+        class IataCode <<vo>> {
+            value
+        }
+
+        class IcaoCode <<vo>> {
+            value
+        }
+
+        class Membership <<vo>> {
+            userEmail
+            isValid
+        }
+
+        enum MemberType <<enum>> {
+            ATCC
+            PILOT
+            FCO
+        }
+
+        class Position <<vo>> {
+            position
+        }
+
+
+        AirTransportCompany "1" *-- "1" CompanyName
+        AirTransportCompany "1" *-- "1" IataCode
+        AirTransportCompany "1" *-- "1" IcaoCode
+        AirTransportCompany "1" *-- "0..*" Membership : has >
+        Membership "1" *-- "1" MemberType : typed as >
+        Membership "1" --> "1" Position : has >
+}
+
+
+' Relacionamentos
+Aircraft "0..*" --> "1" AirTransportCompany : belongs to
+
+
+@enduml

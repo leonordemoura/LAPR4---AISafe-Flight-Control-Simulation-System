@@ -1,0 +1,198 @@
+@startuml
+
+package "aisafe.app.backoffice.console" {
+    class GenerateReportUI <<presentation>> {
+        - controller : GenerateReportController
+        + doShow() : boolean
+        + headline() : String
+    }
+
+    class GenerateReportAction <<presentation>>
+}
+
+package "aisafe.core :: reportGeneration.application" {
+
+    class GenerateReportController <<controller>> {
+        - repositoryFactory : RepositoryFactory
+        - authz : AuthorizationService
+        - service : GenerateReportService
+        + generateReport(period, reportType, areaCode, outputDirectory) : String
+        + getAirControlArea() : Iterable<AirControlArea>
+    }
+
+    class GenerateReportService <<service>> {
+        - repositoryFactory : RepositoryFactory
+        - reportFactory : ReportFactory
+        - reportRenderer : ReportRenderer
+        + generateReport(period, reportType, areaCode, outputDirectory, userEmail, tx) : String
+        + getAirControlArea(userEmail) : Iterable<AirControlArea>
+    }
+
+    class CompositeReportRenderer <<adapter>> {
+        - renderers : ReportRenderer[]
+        + render(report, outputDirectory) : String
+    }
+
+    class PdfReportRenderer <<adapter>> {
+        + render(report, outputDirectory) : String
+    }
+
+    class TextReportRenderer <<adapter>> {
+        + render(report, outputDirectory) : String
+    }
+
+    class ReportMetricsExtractor <<utility>> {
+        + extract(report) : ReportMetrics
+    }
+
+    class ReportMetrics <<vo>> {
+        + totalFlights : long
+        + totalSimulations : long
+        + totalViolations : long
+        + regularFlights : long
+        + charterFlights : long
+        + validatedPlans : long
+        + totalPlans : long
+        + validationRate : double
+        + simulationsWithViolations : long
+        + simulationsWithoutViolations : long
+        + simulationOutcomes : Map
+    }
+}
+
+package "aisafe.core :: airControlArea.domain" {
+    class AirControlArea <<entity>> <<root>> {
+    }
+
+    class AreaCode <<vo>> {
+        - value: String
+    }
+
+    class MinFuelAtArrival <<vo>> {
+        - value: double
+    }
+
+    class MaxAltitude <<vo>> {
+        - value: double
+    }
+
+    class GeoBoundary <<vo>> {
+    }
+
+    class Coordinate <<vo>> {
+        - latitude: double
+        - longitude: double
+    }
+
+    class AreaName <<vo>> {
+        - value: String
+    }
+
+    AirControlArea "1" *-- "1" AreaName
+    AirControlArea "1" *-- "1" AreaCode
+    AirControlArea "1" *-- "1" MinFuelAtArrival
+    AirControlArea "1" *-- "1" MaxAltitude
+    AirControlArea "1" *-- "1" GeoBoundary
+    GeoBoundary "1" *-- "4" Coordinate
+
+}
+
+package "aisafe.core :: reportGeneration.domain" {
+
+    class Report <<entity>> <<aggregateRoot>> {
+        + create(title, period, header, type, areaCode, sections) : Report
+        + title() : ReportTitle
+        + period() : ReportPeriod
+        + header() : ReportHeader
+        + type() : ReportType
+        + areaCode() : AreaCode
+        + sections() : List<ReportSection>
+    }
+
+    class ReportTitle <<vo>>
+    class ReportPeriod <<vo>>
+    class ReportHeader <<vo>>
+    class ReportSection <<vo>>
+
+    enum ReportType {
+        MONTHLY_STATISTICS
+        INCIDENT_ANALYSIS
+        COMPLIANCE_REPORT
+    }
+
+    class ReportFactory <<factory>> {
+        - collectors : Map<ReportType, ReportDataCollector>
+        + create(type, period, areaCode, generatedByUser) : Report
+    }
+
+    interface ReportDataCollector <<domainService>> {
+        + collect(period, areaCode) : List<ReportSection>
+    }
+
+    class MonthlyStatsCollector <<domainService>> {
+        - simulationReportRepository : SimulationReportRepository
+        - flightRepository : FlightRepository
+        + collect(period, areaCode) : List<ReportSection>
+    }
+
+    interface ReportRenderer <<port>> {
+        + render(report, outputDirectory) : String
+    }
+
+    interface ReportRepository <<repository>>
+}
+
+package "aisafe.core :: repositories" {
+    interface SimulationReportRepository <<repository>> {
+        + findByPeriodAndDesignators(period, designators) : List<SimulationReport>
+    }
+    interface FlightRepository <<repository>> {
+        + findByPeriodAndArea(period, areaCode) : List<Flight>
+    }
+    interface AirControlAreaRepository <<repository>> {
+        + findByAreaCode(areaCode) : Optional<AirControlArea>
+    }
+}
+
+' Aggregate composition
+Report "1" *-- "1" ReportTitle
+Report "1" *-- "1" ReportPeriod
+Report "1" *-- "1" ReportHeader
+Report "1" *-- "1..*" ReportSection
+Report "1" --> "1" ReportType
+Report "1" *-- "1" AirControlArea : scoped to >
+
+' Presentation
+GenerateReportAction ..> GenerateReportUI
+
+GenerateReportUI ..> GenerateReportController
+
+' Application wiring
+GenerateReportController ..> GenerateReportService
+GenerateReportController ..> ReportFactory : builds collectors map
+GenerateReportController ..> CompositeReportRenderer : wires PDF + text
+GenerateReportService ..> ReportFactory
+GenerateReportService ..> ReportRepository
+GenerateReportService ..> ReportRenderer
+GenerateReportService ..> AirControlAreaRepository
+
+AirControlAreaRepository ..> AirControlArea : queries >
+
+ReportRenderer <|.. CompositeReportRenderer
+ReportRenderer <|.. PdfReportRenderer
+ReportRenderer <|.. TextReportRenderer
+CompositeReportRenderer o-- PdfReportRenderer
+CompositeReportRenderer o-- TextReportRenderer
+
+PdfReportRenderer ..> ReportMetricsExtractor : uses >
+ReportMetricsExtractor +-- ReportMetrics
+ReportMetricsExtractor ..> Report : parses >
+
+' Domain factory / collector
+ReportFactory ..> ReportDataCollector
+ReportFactory ..> Report : creates >
+ReportDataCollector <|.. MonthlyStatsCollector
+MonthlyStatsCollector ..> FlightRepository
+MonthlyStatsCollector ..> SimulationReportRepository
+
+@enduml

@@ -1,0 +1,112 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as User
+participant "AddAircraftUI" as UI <<presentation>>
+participant "AddAircraftController" as CTRL <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+participant "RepositoryFactory" as Factory <<factory>>
+database "AircraftRepository" as AR <<repository>>
+database "AircraftModelRepository" as MR <<repository>>
+database "AirTransportCompanyRepository" as CR <<repository>>
+participant "Aircraft\n<<Aggregate Root>>" as DOMAIN <<domain>>
+
+activate User
+
+User -> UI : requests to add a new aircraft
+activate UI
+
+    UI --> User : requests aircraft data
+    User --> UI : provides all aircraft data
+
+    UI -> CTRL : addAircraft(registration, modelId, engineIds, firstClassSeats, businessSeats, economySeats, registrationYear, country, status, iataCode)
+    activate CTRL
+
+        CTRL -> PC : repositories()
+        activate PC
+            PC -> AS : instance()
+            activate AS
+                AS -> Factory : create()
+                activate Factory
+                Factory --> AS : repositoryFactory
+                deactivate Factory
+                AS --> PC : repositoryFactory
+            deactivate AS
+        PC --> CTRL : repositoryFactory
+        deactivate PC
+
+        CTRL -> Factory : aircrafts()
+        activate Factory
+        Factory --> CTRL : AircraftRepository
+        deactivate Factory
+
+        CTRL -> Factory : aircraftModels()
+        activate Factory
+        Factory --> CTRL : AircraftModelRepository
+        deactivate Factory
+
+        CTRL -> Factory : getAirTransportCompanyRepository()
+        activate Factory
+        Factory --> CTRL : AirTransportCompanyRepository
+        deactivate Factory
+
+        CTRL -> AR : existsByRegistration(registration)
+        activate AR
+        AR --> CTRL : boolean
+        deactivate AR
+
+        CTRL -> MR : ofIdentity(aircraftModelId)
+        activate MR
+        MR --> CTRL : Optional<AircraftModel>
+        deactivate MR
+
+        CTRL -> CR : findByIataCode(iataCode)
+        activate CR
+        CR --> CTRL : Optional<AirTransportCompany>
+        deactivate CR
+
+        alt registration already exists
+            CTRL --> UI : error "registration already exists"
+
+        else aircraft model not found
+            CTRL --> UI : error "aircraft model not found"
+
+        else company not found
+            CTRL --> UI : error "company not found"
+
+        else all validations pass
+
+            CTRL -> DOMAIN : new Aircraft(registration, model, engines, cabin, registrationYear, country, status, company)
+            activate DOMAIN
+
+                note right of DOMAIN
+                    Enforced Invariants:
+                    - All fields mandatory
+                    - Must have at least one engine
+                    - Total seats <= model max capacity
+                end note
+
+            DOMAIN --> CTRL : aircraft
+            deactivate DOMAIN
+
+            CTRL -> AR : save(aircraft)
+            activate AR
+            AR --> CTRL : success
+            deactivate AR
+
+        end
+
+        CTRL --> UI : operation result
+    deactivate CTRL
+
+    UI --> User : displays result
+deactivate UI
+
+deactivate User
+
+@enduml

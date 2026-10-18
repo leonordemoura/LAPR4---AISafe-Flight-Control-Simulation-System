@@ -1,0 +1,205 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as User
+participant "RegisterFlightRouteUI" as UI <<presentation>>
+participant "RegisterFlightRouteController" as Controller <<application>>
+participant "RegisterFlightRouteService" as Service <<service>>
+participant "FlightRouteDTO" as DTO <<dto>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "FlightRouteRepository" as Repo <<repository>>
+database "AirportRepository" as AirportRepo <<repository>>
+database "AirTransportCompanyRepository" as CompanyRepo <<repository>>
+participant "FlightRoute\n<<Aggregate Root>>" as FlightRoute <<domain>>
+
+activate User
+
+    User -> UI : requests to create a flight route
+    activate UI
+        UI -> Controller : new RegisterFlightRouteController()
+        activate Controller
+
+            Controller -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+                    activate RepoFac
+                        RepoFac --> AS : repositoryFactory
+                    deactivate RepoFac
+                    AS --> PC : repositoryFactory
+                deactivate AS
+            PC --> Controller : repositoryFactory
+            deactivate PC
+
+            Controller -> Service : new RegisterFlightRouteService(repositoryFactory)
+            activate Service
+                Service --> Controller : service
+            deactivate Service
+
+            Controller --> UI : controller
+        deactivate Controller
+
+        UI -> UI : readAirport("Departure Airport Iata Code:")
+
+        UI -> Controller : getAvailableAirports()
+        activate Controller
+            Controller -> Service : getAvailableAirports()
+            activate Service
+                Service -> RepoFac : airports()
+                activate RepoFac
+                    RepoFac -> AirportRepo : create()
+                    activate AirportRepo
+                        AirportRepo --> RepoFac : airportRepository
+                    deactivate AirportRepo
+                    RepoFac --> Service : airportRepository
+                deactivate RepoFac
+                Service -> AirportRepo : findAll()
+                activate AirportRepo
+                    AirportRepo --> Service : airports
+                deactivate AirportRepo
+                Service --> Controller : airports
+            deactivate Service
+            Controller --> UI : airports
+        deactivate Controller
+
+        UI --> User : displays numbered airport list
+        User --> UI : selects origin airport by index
+
+        UI -> UI : readAirport("Arrival Airport Iata Code:")
+
+        UI -> Controller : getAvailableAirports()
+        activate Controller
+            Controller -> Service : getAvailableAirports()
+            activate Service
+                Service -> RepoFac : airports()
+                    activate RepoFac
+                        RepoFac -> AirportRepo : create()
+                        activate AirportRepo
+                            AirportRepo --> RepoFac : airportRepository
+                        deactivate AirportRepo
+                        RepoFac --> Service : airportRepository
+                    deactivate RepoFac
+                Service -> AirportRepo : findAll()
+                activate AirportRepo
+                    AirportRepo --> Service : airports
+                deactivate AirportRepo
+                Service --> Controller : airports
+            deactivate Service
+            Controller --> UI : airports
+        deactivate Controller
+
+        UI --> User : displays numbered airport list
+        User --> UI : selects destination airport by index
+
+        UI --> User : asks for the route name
+        User --> UI : provides route name (routeName)
+
+        UI -> DTO : new FlightRouteDTO(routeName, iataCodeOrigin, iataCodeDestination)
+        activate DTO
+            DTO --> UI : dto
+        deactivate DTO
+
+        UI -> Controller : registerFlightRoute(dto)
+        activate Controller
+        note right of Controller: ensureAuthenticatedUserHasAnyOf(AIR_TRANSPORT_COMPANY_COLLABORATOR)
+
+            Controller -> RepoFac : newTransactionalContext()
+            activate RepoFac
+                RepoFac --> Controller : tx
+            deactivate RepoFac
+            Controller -> Controller : tx.beginTransaction()
+
+            Controller -> Service : registerFlightRoute(dto, tx)
+            activate Service
+
+                Service -> RepoFac : airports(tx)
+                activate RepoFac
+                    RepoFac -> AirportRepo : create()
+                    activate AirportRepo
+                        AirportRepo --> RepoFac : airportRepository
+                    deactivate AirportRepo
+                    RepoFac --> Service : airportRepository
+                deactivate RepoFac
+
+                Service -> AirportRepo : existsByIataCode(dto.originIataCode)
+                activate AirportRepo
+                    AirportRepo --> Service : true
+                deactivate AirportRepo
+
+                Service -> AirportRepo : existsByIataCode(dto.destinationIataCode)
+                activate AirportRepo
+                    AirportRepo --> Service : true
+                deactivate AirportRepo
+
+                Service -> Service : divideRouteName(dto.routeName, routePrefix)
+
+                Service -> RepoFac : getAirTransportCompanyRepository(tx)
+                activate RepoFac
+                    RepoFac -> CompanyRepo : create()
+                    activate CompanyRepo
+                        CompanyRepo --> RepoFac : airTransportCompanyRepository
+                    deactivate CompanyRepo
+                    RepoFac --> Service : airTransportCompanyRepository
+                deactivate RepoFac
+
+                Service -> CompanyRepo : findByIataCode(routePrefix)
+                note right of CompanyRepo: **Rule**\n- route prefix must match an existing\n  air transport company iata code
+                activate CompanyRepo
+                    CompanyRepo --> Service : company
+                deactivate CompanyRepo
+
+                Service -> CompanyRepo : hasCollaborator(userEmail)
+                note right of CompanyRepo: **Rule**\n- user must be a collaborator of the company
+                activate CompanyRepo
+                    CompanyRepo --> Service : true
+                deactivate CompanyRepo
+
+                Service -> RepoFac : flightRoutes(tx)
+                activate RepoFac
+                    RepoFac -> Repo : create()
+                    activate Repo
+                        Repo --> RepoFac : flightRouteRepository
+                    deactivate Repo
+                    RepoFac --> Service : flightRouteRepository
+                deactivate RepoFac
+
+                Service -> Repo : findByRouteName(dto.routeName)
+                note right of Repo: **Rule**\n- route name must be unique within the system
+                activate Repo
+                    Repo --> Service : false
+                deactivate Repo
+
+                Service -> FlightRoute : create(routeName, routeDesignator)
+                note right of FlightRoute: **Enforced Invariants**\n- name is not empty\n- designator is not empty
+                activate FlightRoute
+                    FlightRoute --> Service : flightRoute
+                deactivate FlightRoute
+
+                Service -> Repo : save(flightRoute)
+                activate Repo
+                    Repo --> Service : success
+                deactivate Repo
+
+                Service --> Controller : success
+            deactivate Service
+
+            Controller -> Controller : tx.commit()
+            Controller -> Controller : tx.close()
+            Controller --> UI : success
+        deactivate Controller
+
+        UI --> User : displays success message
+    deactivate UI
+
+deactivate User
+
+@enduml

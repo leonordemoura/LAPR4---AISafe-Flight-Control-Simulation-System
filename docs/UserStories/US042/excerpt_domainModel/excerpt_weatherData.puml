@@ -1,0 +1,79 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "WeatherData Aggregate" {
+
+    class WeatherData <<entity>> <<root>> {
+    }
+
+    class AreaCode <<vo>> {
+        value
+    }
+
+    class ObservationDate <<vo>> {
+        startDateTime
+        endDateTime
+    }
+
+    class WeatherSource <<vo>> {
+        value
+    }
+
+    class WindDirection <<vo>> {
+        degrees
+    }
+
+    class WindSpeed <<vo>> {
+        value
+    }
+
+    class Temperature <<vo>> {
+        value
+    }
+
+    class Pressure <<vo>> {
+        value
+    }
+
+    class WeatherSubArea <<vo>> {
+        minLatitude
+        maxLatitude
+        minLongitude
+        maxLongitude
+        minAltitude
+        maxAltitude
+    }
+
+    enum WindSpeedUnit {
+        MPS
+        KMH
+        KT
+    }
+
+    enum TemperatureUnit {
+        C
+        F
+    }
+
+    enum PressureUnit {
+        HPA
+        PA
+    }
+
+    WeatherData "1" *-- "1" AreaCode : belongs to
+    WeatherData "1" *-- "1" ObservationDate
+    WeatherData "1" *-- "1" WeatherSource
+    WeatherData "1" *-- "1" WeatherSubArea : applies to >
+    WeatherData "1" *-- "1" WindDirection
+    WeatherData "1" *-- "1" WindSpeed
+    WeatherData "1" *-- "1" Temperature
+    WeatherData "1" *-- "1" Pressure
+    WindSpeed "1" --> "1" WindSpeedUnit : has unit >
+    Temperature "1" --> "1" TemperatureUnit : has unit >
+    Pressure "1" --> "1" PressureUnit : has unit >
+}
+
+@enduml

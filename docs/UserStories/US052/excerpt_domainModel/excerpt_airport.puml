@@ -1,0 +1,52 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "Airport Aggregate" {
+    class Airport <<entity>> <<root>> {
+    }
+
+    class IataCode <<vo>> {
+        value
+    }
+
+    class IcaoCode <<vo>> {
+        value
+    }
+
+    class AirportName <<vo>> {
+        value
+    }
+
+    class Town <<vo>> {
+        name
+    }
+
+    class Country <<vo>> {
+        code
+        name
+    }
+
+    class Elevation <<vo>> {
+        value
+    }
+
+    class Coordinate <<vo>> {
+            latitude
+            longitude
+    }
+
+    ' Relacionamentos Airport
+    Airport "1" *-- "1" IataCode
+    Airport "1" *-- "1" IcaoCode
+    Airport "1" *-- "1" AirportName
+    Airport "1" *-- "1" Town
+    Airport "1" *-- "1" Country
+    Airport "1" *-- "1" Elevation
+    Airport "1" *-- "1" Coordinate : located at >
+}
+
+
+@enduml

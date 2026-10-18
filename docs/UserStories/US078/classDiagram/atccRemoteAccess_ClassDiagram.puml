@@ -1,0 +1,156 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+title US078 - ATCC Remote Access (Class Diagram)
+
+package "RCOMP Client (C)" <<client>> {
+    class ATCCClient <<atcc_client.c>> {
+        +main()
+        +print_menu()
+        -do_login()
+        -do_add_aircraft()
+        -do_list_fleet()
+        -do_logout()
+    }
+
+    class ClientSession <<struct>> {
+        -socket: socket_t
+        -connected: int
+        -authenticated: int
+        -username: char[]
+        -host: char[]
+        -port: int
+    }
+
+    class ProtocolIO <<protocol.c/h>> {
+        +protocol_connect(host, port): socket_t
+        +protocol_send_message(sock, payload): int
+        +protocol_receive_message(sock, buffer): int
+        +protocol_close(sock)
+    }
+
+    class CommandBuilder <<inline in client>> {
+        +buildLogin(email, password): String
+        +buildAddAircraft(...): String
+        +buildDecommissionAircraft(reg): String
+        +buildListFleet(iata): String
+        +buildRegisterRoute(name, orig, dest): String
+        +buildDeactivateRoute(name, date): String
+        +buildAddPilot(id, email): String
+        +buildListPilotRoster(): String
+        +buildRemovePilot(id): String
+        +buildLogout(): String
+    }
+
+    class ResponseParser <<inline in client>> {
+        +response_is_ok(response): bool
+        +print_response(response)
+    }
+}
+
+package "AISafe Server (Java)" <<server>> {
+    class RemoteAccessTcpServer {
+        +start()
+        -acceptLoop()
+    }
+
+    class RemoteConnectionHandler {
+        +run()
+        -dispatch(request, context): String
+    }
+
+    class RemoteMessageCodec {
+        +readMessage(input): String
+        +writeMessage(output, message)
+    }
+    
+    class CompositeRemoteCommandHandler {
+        +handle(commandLine, context): String
+        -handlers: Map<Role, RemoteCommandHandler>
+    }
+
+    interface RemoteCommandHandler {
+        +handle(commandLine, context): String
+        +serviceId(): String
+    }
+
+    class CollaboratorRemoteCommandHandler {
+        +handle(commandLine, context): String
+        +serviceId(): String
+        -handleLogin()
+        -handleLogout()
+        -handleAddAircraft()
+        -handleDecommission()
+        -handleListFleet()
+        -handleRegisterRoute()
+        -handleDeactivateRoute()
+        -handleAddPilot()
+        -handleListPilotRoster()
+        -handleRemovePilot()
+    }
+
+    class RemoteConnectionContext {
+        -clientIp: String
+        -clientPort: int
+        -authenticated: boolean
+        -username: String
+        -role: Role
+        +setAuthenticated(username, role)
+        +clearAuthentication()
+    }
+
+    class RemoteResponse <<utility>> {
+        +ok(status, payload): String
+        +error(code, message): String
+    }
+
+    class RemoteAccessUdpLogger {
+        +log(username, ip, port, serviceId, event)
+    }
+}
+
+package "aisafe.core (existing)" <<application>> {
+    class AddAircraftController
+    class DecommissionAircraftController
+    class ListFleetController
+    class RegisterFlightRouteController
+    class DeactivateFlightRouteController
+    class AddPilotController
+    class ListPilotRosterController
+    class RemovePilotController
+}
+
+' --- Client internal ---
+ATCCClient --> ClientSession
+ATCCClient --> ProtocolIO
+ATCCClient ..> CommandBuilder : builds commands
+ATCClient ..> ResponseParser : parses responses
+
+' --- Server internal ---
+RemoteAccessTcpServer --> RemoteConnectionHandler : submit per Socket
+RemoteConnectionHandler --> RemoteMessageCodec : read/write messages
+RemoteConnectionHandler --> CompositeRemoteCommandHandler : handle()
+CompositeRemoteCommandHandler --> RemoteCommandHandler : delegate
+CollaboratorRemoteCommandHandler ..|> RemoteCommandHandler
+RemoteConnectionHandler --> RemoteConnectionContext
+RemoteConnectionHandler --> RemoteAccessUdpLogger : DISCONNECT (if still auth)
+CollaboratorRemoteCommandHandler --> RemoteConnectionContext
+CollaboratorRemoteCommandHandler --> RemoteResponse
+CollaboratorRemoteCommandHandler --> RemoteAccessUdpLogger : LOGIN_*, LOGOUT
+CollaboratorRemoteCommandHandler --> AddAircraftController : ADD_AIRCRAFT
+CollaboratorRemoteCommandHandler --> DecommissionAircraftController : DECOMMISSION_AIRCRAFT
+CollaboratorRemoteCommandHandler --> ListFleetController : LIST_FLEET
+CollaboratorRemoteCommandHandler --> RegisterFlightRouteController : REGISTER_ROUTE
+CollaboratorRemoteCommandHandler --> DeactivateFlightRouteController : DEACTIVATE_ROUTE
+CollaboratorRemoteCommandHandler --> AddPilotController : ADD_PILOT
+CollaboratorRemoteCommandHandler --> ListPilotRosterController : LIST_PILOT_ROSTER
+CollaboratorRemoteCommandHandler --> RemovePilotController : REMOVE_PILOT
+
+' --- Client <-> Server (distributed communication) ---
+ProtocolIO ..> RemoteAccessTcpServer : <<TCP>> connect (socket)
+ProtocolIO ..> RemoteMessageCodec : <<protocol>>\n[4-byte len][UTF-8 payload]
+CommandBuilder ..> CompositeRemoteCommandHandler : <<sends>>\nLOGIN, ADD_AIRCRAFT,\nLIST_FLEET, LOGOUT
+CompositeRemoteCommandHandler ..> ResponseParser : <<returns>>\nOK;... / ERR;...
+
+@enduml

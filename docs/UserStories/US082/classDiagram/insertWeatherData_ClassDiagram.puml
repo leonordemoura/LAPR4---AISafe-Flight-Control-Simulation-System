@@ -1,0 +1,204 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing true
+
+package "aisafe" {
+
+    package "app" {
+        package "backoffice" {
+            package "console" {
+
+                class InsertWeatherDataUI <<presentation>> {
+                    - controller : InsertWeatherDataController
+                    + doShow() : boolean
+                    - selectFlight(flights : Iterable<Flight>) : Flight
+                    - selectFlightPlan(flight : Flight) : FlightPlan
+                    - selectWeatherData() : WeatherData
+                }
+
+            }
+        }
+    }
+
+    package "core" {
+
+        class InsertWeatherDataController <<controller>> {
+            - factory : RepositoryFactory
+            + getPilotFlights(userEmail : String) : Iterable<Flight>
+            + insertWeatherData(flightDesignator : String, flightPlanId : String, weatherDataId : String) : boolean
+        }
+
+        class InsertWeatherDataService <<service>> {
+            + insertWeatherData(flightDesignator : String, flightPlanId : String, weatherDataId : String, factory : RepositoryFactory) : boolean
+        }
+
+        package "Flight Aggregate" {
+
+            class Flight <<entity>> <<aggregateRoot>> {
+                - designator : FlightDesignator
+            }
+
+            class FlightDesignator <<vo>> {
+                - airlineCode : String
+                - flightNumber : String
+                - operationalSuffix : String
+            }
+
+            class FlightPlan <<entity>> {
+                - submittedAt : LocalDateTime
+                - rejectionReason : String
+                + addWeatherData(weatherData : WeatherData) : boolean
+                - validateSpatialConsistency(weatherData : WeatherData) : void
+                - validateTemporalConsistency(weatherData : WeatherData) : void
+                - invalidateValidation() : void
+                + isValidated() : boolean
+                + hasPassedSimulation() : boolean
+            }
+
+            class FuelQuantity <<vo>> {
+                - value : Double
+                - unit : String
+            }
+
+            class DepartureDatetime <<vo>> {
+                - dateTime : LocalDateTime
+            }
+
+            class AircraftRegistration <<vo>> {
+                - value : String
+            }
+
+            class PilotID <<vo>> {
+                - value : String
+            }
+
+            enum FlightType <<enum>> {
+                REGULAR
+                CHARTER
+            }
+
+            enum FlightPlanStatus <<enum>> {
+                DRAFT
+                VALIDATED
+                ACTIVE
+                CANCELLED
+            }
+
+        }
+
+        package "WeatherData Aggregate" {
+
+            class WeatherData <<entity>> <<aggregateRoot>> {
+            }
+
+            class AreaCode <<vo>> {
+                - value : String
+            }
+
+            class ObservationDate <<vo>> {
+                - startDateTime : LocalDateTime
+                - endDateTime : LocalDateTime
+            }
+
+            class WeatherSource <<vo>> {
+                - value : String
+            }
+
+            class WeatherSubArea <<vo>> {
+                - minLatitude : Double
+                - maxLatitude : Double
+                - minLongitude : Double
+                - maxLongitude : Double
+                - minAltitude : Double
+                - maxAltitude : Double
+            }
+
+            class WindDirection <<vo>> {
+                - degrees : Double
+            }
+
+            class WindSpeed <<vo>> {
+                - value : Double
+            }
+
+            class Temperature <<vo>> {
+                - value : Double
+            }
+
+            class Pressure <<vo>> {
+                - value : Double
+            }
+
+            enum WindSpeedUnit <<enum>> {
+                MPS
+                KMH
+                KT
+            }
+
+            enum TemperatureUnit <<enum>> {
+                C
+                F
+            }
+
+            enum PressureUnit <<enum>> {
+                HPA
+                PA
+            }
+
+        }
+
+        interface FlightRepository <<repository>> {
+            + findByDesignator(designator : FlightDesignator) : Optional<Flight>
+            + findByPilot(userEmail : String) : Iterable<Flight>
+            + findFlightPlan(designator : FlightDesignator, planId : String) : Optional<FlightPlan>
+            + save(flight : Flight) : Flight
+        }
+
+        interface WeatherDataRepository <<repository>> {
+            + findById(id : String) : Optional<WeatherData>
+        }
+
+        ' ── Flight Aggregate relationships ───────────────
+        Flight "1" *-- "1" FlightDesignator
+        Flight "1" --> "1" FlightType
+        Flight "1" *-- "0..*" FlightPlan
+
+        FlightPlan "1" --> "1" FlightPlanStatus
+        FlightPlan "1" --> "1" AircraftRegistration
+        FlightPlan "1" --> "1" PilotID
+        FlightPlan "1" *-- "1" DepartureDatetime
+        FlightPlan "1" *-- "1" FuelQuantity
+        FlightPlan "0..*" --> "0..1" WeatherData
+
+        ' ── WeatherData Aggregate relationships ──────────
+        WeatherData "1" *-- "1" AreaCode
+        WeatherData "1" *-- "1" ObservationDate
+        WeatherData "1" *-- "1" WeatherSource
+        WeatherData "1" *-- "1" WeatherSubArea
+        WeatherData "1" *-- "1" WindDirection
+        WeatherData "1" *-- "1" WindSpeed
+        WeatherData "1" *-- "1" Temperature
+        WeatherData "1" *-- "1" Pressure
+
+        WindSpeed "1" --> "1" WindSpeedUnit
+        Temperature "1" --> "1" TemperatureUnit
+        Pressure "1" --> "1" PressureUnit
+
+        ' ── Repository relationships ──────────────────────
+        FlightRepository ..> Flight
+        FlightRepository ..> FlightPlan
+        WeatherDataRepository ..> WeatherData
+
+        ' ── Architecture relationships ────────────────────
+        InsertWeatherDataUI ..> InsertWeatherDataController
+        InsertWeatherDataController ..> InsertWeatherDataService
+        InsertWeatherDataService ..> FlightRepository
+        InsertWeatherDataService ..> WeatherDataRepository
+        InsertWeatherDataService ..> Flight
+        InsertWeatherDataService ..> FlightPlan
+        InsertWeatherDataService ..> WeatherData
+
+    }
+}
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Weather Person" as Actor
+participant "WeatherClientUI" as UI <<presentation>>
+participant "WeatherDataController" as Controller <<application>>
+database "AirControlAreaRepository" as AreaRepo <<repository>>
+database "WeatherDataRepository" as WDRepo <<repository>>
+participant "WeatherData\n<<Aggregate Root>>" as Domain <<domain>>
+
+Actor -> UI: start registration
+activate UI
+
+UI -> Actor: request data
+Actor -> UI: enter data(date, source, windDirection,\nwindSpeed, temperature, pressure, areaID)
+
+UI -> Controller: registerWeatherData(date, source, windDirection,\nwindSpeed, temperature, pressure, areaID)
+activate Controller
+
+Controller -> AreaRepo: findById(areaID)
+activate AreaRepo
+AreaRepo --> Controller: AirControlArea / null
+deactivate AreaRepo
+
+alt Área existe
+
+    Controller -> Domain: create(date, source, windDirection,\nwindSpeed, temperature, pressure, AirControlArea)
+    activate Domain
+
+    note right of Domain
+        Enforced Invariants:
+        - Required fields present
+        - Physical values valid
+    end note
+
+    Domain --> Controller: WeatherData
+    deactivate Domain
+
+    Controller -> WDRepo: save(weatherData)
+    activate WDRepo
+    WDRepo --> Controller: ok
+    deactivate WDRepo
+
+    Controller --> UI: success
+
+else Área inválida
+    Controller --> UI: error
+end
+
+deactivate Controller
+
+UI -> Actor: show result
+deactivate UI
+
+@enduml

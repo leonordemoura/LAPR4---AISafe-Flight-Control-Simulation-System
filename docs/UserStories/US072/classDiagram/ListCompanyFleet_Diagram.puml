@@ -1,0 +1,107 @@
+@startuml
+
+package "aisafe.core" {
+
+    class ListFleetController <<application>> {
+        - aircraftRepo: AircraftRepository
+        - companyRepo: AirTransportCompanyRepository
+        + availableCompanies(): List<AirTransportCompany>
+        + getFleet(iataCode: String): List<Aircraft>
+        + getFleetByModel(iataCode: String, model: String): List<Aircraft>
+        + getFleetByMaker(iataCode: String, maker: String): List<Aircraft>
+        + getFleetByMinCapacity(iataCode: String, minCapacity: int): List<Aircraft>
+        + getFleetByMaxCapacity(iataCode: String, maxCapacity: int): List<Aircraft>
+        + getFleetByMaxAge(iataCode: String, maxAge: int): List<Aircraft>
+    }
+
+    class Aircraft <<entity>> <<root>> {
+        - registration: AircraftRegistration
+        - status: AircraftStatus
+        + registration(): AircraftRegistration
+        + status(): AircraftStatus
+        + age(): int
+    }
+
+    class AirTransportCompany <<entity>> <<root>> {
+        - iataCode: IataCode
+        - companyName: CompanyName
+    }
+
+    class AircraftRegistration <<vo>> {
+        - value: String
+    }
+
+    class CabinConfiguration <<vo>> {
+        - economySeats: int
+        - businessSeats: int
+        - firstClassSeats: int
+        + totalSeats(): int
+    }
+
+    class CurrentEngine <<vo>> {
+        - engineModelId: String
+    }
+
+    class RegistrationYear <<vo>> {
+        - year: int
+        + age(): int
+    }
+
+    class Country <<vo>> {
+        - name: String
+        - numericCode: Integer
+    }
+
+    enum AircraftStatus <<enum>> {
+        ACTIVE
+        DECOMMISSIONED
+    }
+
+    class AircraftModel <<entity>> <<root>> {
+        - id: AircraftModelId
+        + name(): AircraftModelName
+        + maker(): Maker
+    }
+
+    Aircraft "0..*" --> "1" AircraftModel
+
+    interface AircraftRepository <<interface>> {
+        + findByCompany(company: AirTransportCompany): List<Aircraft>
+        + findByCompanyAndModel(company: AirTransportCompany, model: String): List<Aircraft>
+        + findByCompanyAndMaker(company: AirTransportCompany, maker: String): List<Aircraft>
+        + findByCompanyAndMinCapacity(company: AirTransportCompany, minCapacity: int): List<Aircraft>
+        + findByCompanyAndMaxCapacity(company: AirTransportCompany, maxCapacity: int): List<Aircraft>
+        + findByCompanyAndMaxAge(company: AirTransportCompany, maxAge: int): List<Aircraft>
+    }
+
+    interface AirTransportCompanyRepository <<interface>> {
+        + findByIataCode(iataCode: IataCode): Optional<AirTransportCompany>
+        + findAll(): Iterable<AirTransportCompany>
+    }
+
+    Aircraft "1" *-- "1" AircraftRegistration
+    Aircraft "1" *-- "1" CabinConfiguration
+    Aircraft "1" *-- "1" RegistrationYear
+    Aircraft "1" *-- "1" Country
+    Aircraft "1" *-- "1..*" CurrentEngine
+    Aircraft --> AircraftStatus
+    Aircraft "0..*" --> "1" AirTransportCompany
+
+    ListFleetController ..> AircraftRepository
+    ListFleetController ..> AirTransportCompanyRepository
+
+    AircraftRepository ..> Aircraft
+    AirTransportCompanyRepository ..> AirTransportCompany
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class ListFleetUI <<presentation>> {
+        - controller: ListFleetController
+        + doShow(): boolean
+    }
+
+    ListFleetUI ..> ListFleetController
+}
+
+@enduml

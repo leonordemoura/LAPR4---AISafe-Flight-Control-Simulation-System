@@ -1,0 +1,129 @@
+{
+  "Flights": [
+    {
+      "ID": 123456,
+      "Type": "regular",
+      "Route": "AA123",
+      "DepartureTime": "09:00",
+      "Leg": [
+        {
+          "Departure": "OPO",
+          "Arrival": "MAD",
+          "Fuel": { "Quantity": 4200, "Unit": "kg" },
+          "FlightProfile": {
+            "Climb": [
+              { "Altitude": { "Value": 0,     "Unit": "m" }, "Speed": { "Value": 210, "Unit": "Knots" }, "RateClimb": { "Value": 12.0, "Unit": "m/s" } },
+              { "Altitude": { "Value": 12000, "Unit": "m" }, "Speed": { "Value": 300, "Unit": "Knots" }, "RateClimb": { "Value": 6.0,  "Unit": "m/s" } }
+            ],
+            "Descend": [
+              { "Altitude": { "Value": 12000, "Unit": "m" }, "Speed": { "Value": 300, "Unit": "Knots" }, "RateDescent": { "Value": -10, "Unit": "m/s" } },
+              { "Altitude": { "Value": 0,     "Unit": "m" }, "Speed": { "Value": 140, "Unit": "Knots" }, "RateDescent": { "Value": -5,  "Unit": "m/s" } }
+            ],
+            "Cruise": { "Speed": { "Value": 460, "Unit": "Knots" } }
+          },
+          "Segments": [
+            {
+              "Mode": "climb",
+              "Start": { "Latitude": 45.0, "Longitude": 3.21, "Altitude": { "Quantity": 100,   "Unit": "m" } },
+              "End":   { "Latitude": 45.0, "Longitude": 5.00, "Altitude": { "Quantity": 12000,  "Unit": "m" } }
+            },
+            {
+              "Mode": "cruise",
+              "Start": { "Latitude": 45.0, "Longitude": 5.00, "Altitude": { "Quantity": 12000, "Unit": "m" } },
+              "End":   { "Latitude": 45.0, "Longitude": 8.00, "Altitude": { "Quantity": 12000, "Unit": "m" } }
+            },
+            {
+              "Mode": "descend",
+              "Start": { "Latitude": 45.0,   "Longitude": 8.00,  "Altitude": { "Quantity": 12000, "Unit": "m" } },
+              "End":   { "Latitude": 40.4168, "Longitude": -3.70, "Altitude": { "Quantity": 650,   "Unit": "m" } }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "ID": 789123,
+      "Type": "regular",
+      "Route": "AA124",
+      "DepartureTime": "10:00",
+      "Leg": [
+        {
+          "Departure": "KEF",
+          "Arrival": "OSL",
+          "Fuel": { "Quantity": 5100, "Unit": "kg" },
+          "FlightProfile": {
+            "Climb": [
+              { "Altitude": { "Value": 0,     "Unit": "m" }, "Speed": { "Value": 200, "Unit": "Knots" }, "RateClimb": { "Value": 11.0, "Unit": "m/s" } },
+              { "Altitude": { "Value": 12000, "Unit": "m" }, "Speed": { "Value": 290, "Unit": "Knots" }, "RateClimb": { "Value": 6.5,  "Unit": "m/s" } }
+            ],
+            "Descend": [
+              { "Altitude": { "Value": 12000, "Unit": "m" }, "Speed": { "Value": 290, "Unit": "Knots" }, "RateDescent": { "Value": -10, "Unit": "m/s" } },
+              { "Altitude": { "Value": 0,     "Unit": "m" }, "Speed": { "Value": 140, "Unit": "Knots" }, "RateDescent": { "Value": -5,  "Unit": "m/s" } }
+            ],
+            "Cruise": { "Speed": { "Value": 450, "Unit": "Knots" } }
+          },
+          "Segments": [
+            {
+              "Mode": "climb",
+              "Start": { "Latitude": 43.81, "Longitude": 5.0, "Altitude": { "Quantity": 100,   "Unit": "m" } },
+              "End":   { "Latitude": 45.00, "Longitude": 5.0, "Altitude": { "Quantity": 12000,  "Unit": "m" } }
+            },
+            {
+              "Mode": "cruise",
+              "Start": { "Latitude": 45.00, "Longitude": 5.0, "Altitude": { "Quantity": 12000, "Unit": "m" } },
+              "End":   { "Latitude": 45.00, "Longitude": 8.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }
+            },
+            {
+              "Mode": "descend",
+              "Start": { "Latitude": 45.00,  "Longitude": 8.0,   "Altitude": { "Quantity": 12000, "Unit": "m" } },
+              "End":   { "Latitude": 59.9139, "Longitude": 10.75, "Altitude": { "Quantity": 20,    "Unit": "m" } }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "ID": 555999,
+      "Type": "regular",
+      "Route": "AA125",
+      "DepartureTime": "11:30",
+      "Leg": [
+        {
+          "Departure": "CAI",
+          "Arrival": "NBO",
+          "Fuel": { "Quantity": 6000, "Unit": "kg" },
+          "FlightProfile": {
+            "Climb": [
+              { "Altitude": { "Value": 0,     "Unit": "m" }, "Speed": { "Value": 205, "Unit": "Knots" }, "RateClimb": { "Value": 11.5, "Unit": "m/s" } },
+              { "Altitude": { "Value": 12000, "Unit": "m" }, "Speed": { "Value": 295, "Unit": "Knots" }, "RateClimb": { "Value": 6.5,  "Unit": "m/s" } }
+            ],
+            "Descend": [
+              { "Altitude": { "Value": 12000, "Unit": "m" }, "Speed": { "Value": 295, "Unit": "Knots" }, "RateDescent": { "Value": -10, "Unit": "m/s" } },
+              { "Altitude": { "Value": 0,     "Unit": "m" }, "Speed": { "Value": 140, "Unit": "Knots" }, "RateDescent": { "Value": -5,  "Unit": "m/s" } }
+            ],
+            "Cruise": { "Speed": { "Value": 465, "Unit": "Knots" } }
+          },
+          "Segments": [
+            {
+              "Mode": "climb",
+              "Start": { "Latitude": 44.71, "Longitude": 5.0, "Altitude": { "Quantity": 100,   "Unit": "m" } },
+              "End":   { "Latitude": 45.00, "Longitude": 5.0, "Altitude": { "Quantity": 12000,  "Unit": "m" } }
+            },
+            {
+              "Mode": "cruise",
+              "Start": { "Latitude": 45.00, "Longitude": 5.0, "Altitude": { "Quantity": 12000, "Unit": "m" } },
+              "End":   { "Latitude": 45.00, "Longitude": 8.0, "Altitude": { "Quantity": 12000, "Unit": "m" } }
+            },
+            {
+              "Mode": "descend",
+              "Start": { "Latitude": 45.00,  "Longitude": 8.0,   "Altitude": { "Quantity": 12000, "Unit": "m" } },
+              "End":   { "Latitude": -1.2921, "Longitude": 36.82, "Altitude": { "Quantity": 500,   "Unit": "m" } }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

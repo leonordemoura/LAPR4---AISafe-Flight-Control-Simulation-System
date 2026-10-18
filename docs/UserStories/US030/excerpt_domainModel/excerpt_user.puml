@@ -1,0 +1,63 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "User Aggregate" {
+    class SystemUser <<entity>> <<root>> {
+    }
+
+    class UserId <<vo>> {
+        value
+    }
+
+    enum Role <<enum>> {
+        ADMIN
+        BACKOFFICE_OPERATOR
+        AIR_TRANSPORT_COMPANY_COLLABORATOR
+        PILOT
+        FLIGHT_CONTROL_OPERATOR
+        WEATHER_PERSON
+    }
+    class AlsafeProfile <<entity>> {
+    }
+
+    class SecurityClearance <<vo>> {
+        expiryDate
+    }
+
+    class SkillsAssessment <<vo>> {
+        lastAssessmentDate
+    }
+
+    class Email <<vo>> {
+        emailAddress
+    }
+
+    class Email_Domains <<vo>> {
+        domain
+    }
+
+    class PhoneNumber <<vo>> {
+        code {**country code**}
+        number
+    }
+
+    class FullName <<vo>> {
+        firstName
+        lastName
+    }
+
+    ' Relacionamentos User
+    SystemUser "1" *-- "1" UserId
+    SystemUser "1" --> "1" Role : assigned >
+    SystemUser "1" *-- "1" Email : identifies
+    SystemUser "1" *-- "1" FullName : has
+    SystemUser "1" *-- "1" PhoneNumber : has
+    SystemUser "1" *-- "0..1" AlsafeProfile : has >
+    AlsafeProfile "1" *-- "1" SecurityClearance
+    AlsafeProfile "1" *-- "1" SkillsAssessment
+    Email "1" *-- "1" Email_Domains : belongs to
+}
+@enduml

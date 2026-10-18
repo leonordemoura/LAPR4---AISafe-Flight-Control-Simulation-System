@@ -1,0 +1,82 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "EngineModel Aggregate"{
+    class EngineModel <<entity>> <<root>> {
+    }
+
+    class EngineModelName <<vo>> {
+        value
+    }
+
+    class Power <<vo>> {
+        value
+    }
+
+    class Tsfc <<vo>> {
+        value
+    }
+
+    class FuelType <<entity>>
+
+    class FuelTypeName <<vo>> {
+        type
+    }
+
+    class FuelTypeDensity <<vo>> {
+        density
+    }
+
+    class FuelTypeSpecificEnergy <<vo>> {
+        specificEnergy
+    }
+
+    enum MotorizationType <<enum>> {
+        TURBOPROP
+        TURBOFAN
+        TURBOJET
+        RAMJET
+        ELECTRIC_PROPELLER
+    }
+
+    class Maker <<Entity>> {
+    }
+
+    class MakerName<<vo>>{
+        name
+    }
+
+    class Country <<vo>> {
+        name
+        numericCode
+    }
+
+    class MakerID <<vo>> {
+        value
+    }
+
+    enum Unit <<enum>>{
+        HORSEPOWER
+        KILOWATT
+    }
+
+    ' Relacionamentos EngineModel
+    EngineModel "1" *-- "1" EngineModelName
+    EngineModel "1" *-- "1" Power : power
+    EngineModel "1" *-- "1" FuelType : fuelType
+    EngineModel "1" *-- "1" Tsfc : tsfc
+    EngineModel "1" --> "1" MotorizationType : typed as >
+    EngineModel "1..*" --> "1" Maker : made by >
+    Maker "1"  *-- "1" MakerName : named >
+    Maker "1"  *-- "1" Country : located in >
+    Maker "1"  *-- "1" MakerID : identified by >
+    Power "1" --> "1" Unit : measured in >
+    FuelType "1" *-- "1" FuelTypeName : named >
+    FuelType "1" *-- "1" FuelTypeDensity : has density >
+    FuelType "1" *-- "1" FuelTypeSpecificEnergy : has specific energy
+}
+
+@enduml

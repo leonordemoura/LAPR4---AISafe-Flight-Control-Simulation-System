@@ -1,0 +1,49 @@
+@startuml "registerEngineModel_SD"
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "EngineModelUI" as UI <<presentation>>
+participant "EngineModelController" as Controller <<application>>
+database "EngineModelRepository" as Repo <<repository>>
+participant "EngineModel\n<<Aggregate Root>>" as EngineModel <<domain>>
+
+activate User
+
+    User -> UI : requests to create an engine model
+    activate UI
+        UI --> User : asks for engine model details
+        User -> UI : enters engine model details (name, makerID, motorizationType, fuelType, power, tsfc)
+
+        UI -> Controller : registerEngineModel(name, makerID, motorizationType, fuelType, power, tsfc)
+        activate Controller
+
+            alt modelID is unique
+                Controller -> EngineModel : create(name, makerID, motorizationType, fuelType, power, tsfc)
+                Note right of EngineModel: **Enforced Invariants**\n- name is not empty\n- manufacturer is not empty\n- tsfc is a positive number\n- name and manufacturer combination must be unique
+                activate EngineModel
+                    EngineModel --> Controller : engineModel
+                deactivate EngineModel
+
+                Controller -> Repo : save(engineModel)
+                activate Repo
+                    Repo --> Controller : success
+                deactivate Repo
+
+                Controller --> UI : success message
+            else modelID is not unique
+                Controller --> UI : error message indicating modelID already exists
+            end
+
+        deactivate Controller
+
+        UI --> User : displays message
+    deactivate UI
+
+deactivate User
+
+@enduml

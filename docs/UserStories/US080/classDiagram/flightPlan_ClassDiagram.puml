@@ -1,0 +1,283 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide empty methods
+
+package "aisafe.core" {
+
+    class Flight <<entity>> <<aggregateRoot>> {
+        + aircraftRegistration() : AircraftRegistration
+        + registerOrReplaceFlightPlan(aircraftReg, pilotId, departure, arrival, fuel, dslSource) : FlightPlan
+        + addFlightPlan(aircraftReg, pilotId, departure, arrival, fuel, dslSource) : FlightPlan
+        + pendingReplaceablePlanId() : Optional<Long>
+        + currentFlightPlanOptional() : Optional<FlightPlan>
+        + flightPlans() : List<FlightPlan>
+    }
+
+    class FlightPlan <<entity>> {
+        + dslSource() : DslSource
+        + status() : FlightPlanStatus
+        + isDraft() : boolean
+        + cancel() : void
+        + markAsValidated() : void
+    }
+
+    class FlightRoute <<entity>> <<aggregateRoot>> {
+        + routeName() : RouteName
+        + isActiveAt(at : LocalDateTime) : boolean
+    }
+
+    class FlightDesignator <<vo>>
+    class RouteName <<vo>>
+
+    FlightRoute "1" *-- "1" RouteName : identified by >
+    Flight "1" *-- "1" FlightDesignator : has designator >
+    Flight "1" *-- "1" AircraftRegistration : assigned aircraft >
+
+    class Aircraft <<entity>> <<aggregateRoot>> {
+        + isActive() : boolean
+        + company() : AirTransportCompany
+    }
+
+    class PilotID <<vo>> {
+        + value() : String
+    }
+
+    class PilotCertification <<entity>> <<aggregateRoot>> {
+        + identity() : PilotID
+        + userEmail() : Email
+        + isActive() : boolean
+        + company() : AirTransportCompany
+    }
+
+    class AirTransportCompany <<entity>> <<aggregateRoot>> {
+        + iataCode() : IataCode
+    }
+
+    class DepartureDateTime <<vo>>{
+        - value : LocalDateTime
+    }
+    class ArrivalDateTime <<vo>>{
+        - value : LocalDateTime
+    }
+    class FuelQuantity <<vo>>{
+        - value : double
+        - unit : String
+    }
+    class AircraftRegistration <<vo>>{
+        - registration : String
+    }
+
+    class DslSource <<vo>> {
+        - content : String
+        + content() : String
+    }
+
+    enum FlightPlanStatus <<enum>> {
+        DRAFT
+        VALIDATED
+        ACTIVE
+        CANCELLED
+    }
+
+    enum AircraftStatus <<enum>> {
+        ACTIVE
+        DECOMMISSIONED
+    }
+
+    interface FlightRepository <<interface>> {
+        + findByDesignator(designator : FlightDesignator) : Optional<Flight>
+        + hasOverlappingScheduleForPilot(pilotId, departure, arrival, excludePlanId, excludeFlightId) : boolean
+        + save(flight : Flight) : Flight
+    }
+
+    interface AircraftRepository <<interface>> {
+        + findByRegistration(registration) : Optional<Aircraft>
+    }
+
+    interface PilotCertificationRepository <<interface>> {
+        + findByPilotId(pilotId : PilotID) : Optional<PilotCertification>
+    }
+
+    interface RepositoryFactory <<interface>> {
+        + newTransactionalContext() : TransactionalContext
+        + flights(tx : TransactionalContext) : FlightRepository
+        + aircrafts(tx : TransactionalContext) : AircraftRepository
+        + pilots(tx : TransactionalContext) : PilotCertificationRepository
+    }
+
+    class AuthorizationGuardService <<service>> {
+        + ensureAuthenticatedPilot() : void
+    }
+
+    class FlightPlanDslGenerator <<applicationService>> {
+        + {static} generate(flightIdentifier, flightType, legs) : String
+    }
+
+    class FlightPlanScheduleResolver <<utility>> {
+        + {static} fromRegisterDto(dto, dslText) : FlightPlanSchedule
+    }
+
+    class PilotScheduleConflictService <<applicationService>> {
+        + ensureNoOverlap(pilotId, schedule, excludePlanId, excludeFlightId, tx) : void
+    }
+
+    class FlightPlanDslContentGuard <<utility>> {
+        + {static} ensureMinimumStructure(dslContent) : void
+    }
+
+    class FlightPlanSchedule <<vo>> {
+        + departure() : LocalDateTime
+        + arrival() : LocalDateTime
+    }
+
+    class RegisterFlightPlanLegInput <<dto>>
+    class RegisterFlightPlanSegmentInput <<dto>> {
+        + widthKm : double
+        + windDirectionDeg : double
+        + windSpeed : double
+        + windUnit : String
+    }
+
+    class RegisterFlightPlanService <<applicationService>> {
+        - repositories : RepositoryFactory
+        - pilotScheduleConflictService : PilotScheduleConflictService
+        + validateFlight(airlineCode, number, suffix, tx) : Flight
+        + validatePilot(flight, pilotId, tx) : PilotCertification
+        + registerFlightPlan(dto, tx) : Flight
+        - ensureFlightAircraftOperational(flight, tx) : Aircraft
+        - ensureRouteActiveAt(route, at) : void
+        - resolveDslContent(dto) : String
+        - applyRegistrationMetadata(plan, flight, dto) : void
+    }
+
+    class RegisterFlightPlanController <<useCaseController>> {
+        - authorizationGuardService : AuthorizationGuardService
+        - repositoryFactory : RepositoryFactory
+        - registerFlightPlanService : RegisterFlightPlanService
+        - validatedFlight : Flight
+        + validateFlight(...) : Flight
+        + validatedFlightAircraftRegistration() : String
+        + validatePilot(pilotId) : void
+        + registerFlightPlan(dto) : Flight
+    }
+
+    class RegisterFlightPlanDTO <<dto>> {
+        + flightAirlineCode : String
+        + flightNumber : int
+        + flightOperationalSuffix : String
+        + pilotId : String
+        + departureDateTime : LocalDateTime
+        + arrivalDateTime : LocalDateTime
+        + fuelQuantity : double
+        + fuelUnit : String
+        + dslContent : String
+        + legs : List<RegisterFlightPlanLegInput>
+        + flightTypeForDsl : String
+        + flightDesignatorText() : String
+    }
+
+    ' DOMAIN RELATIONSHIPS
+    Flight "1" --> "1" FlightRoute : route >
+    Flight "1" *-- "0..*" FlightPlan : flightPlans >
+
+    FlightPlan "1" *-- "1" DepartureDateTime
+    FlightPlan "1" *-- "1" ArrivalDateTime
+    FlightPlan "1" *-- "1" FuelQuantity
+    FlightPlan "1" *-- "1" AircraftRegistration : plan aircraft >
+    FlightPlan "1" *-- "1" PilotID
+    FlightPlan "1" *-- "1" DslSource
+    FlightPlan "1" --> "1" FlightPlanStatus
+
+    Aircraft "1" --> "1" AircraftStatus : has status >
+    Aircraft "1" --> "1" AirTransportCompany : company >
+    PilotCertification "1" --> "1" AirTransportCompany : company >
+
+    ' REPOSITORY RETURNS
+    FlightRepository ..> Flight : returns >
+    AircraftRepository ..> Aircraft : returns >
+    PilotCertificationRepository ..> PilotCertification : returns >
+
+    RepositoryFactory ..> FlightRepository : flights(tx) >
+    RepositoryFactory ..> AircraftRepository : aircrafts(tx) >
+    RepositoryFactory ..> PilotCertificationRepository : pilots(tx) >
+
+    ' APPLICATION DEPENDENCIES
+    RegisterFlightPlanController ..> AuthorizationGuardService : ensureAuthenticatedPilot >
+    RegisterFlightPlanController ..> RegisterFlightPlanService : delegates to >
+    RegisterFlightPlanController ..> RegisterFlightPlanDTO : uses >
+
+    RegisterFlightPlanService ..> RepositoryFactory : uses >
+    RegisterFlightPlanService ..> FlightPlanDslGenerator : generate DSL from legs in DTO >
+    RegisterFlightPlanService ..> FlightPlanScheduleResolver : resolve schedule >
+    FlightPlanScheduleResolver ..> RegisterFlightPlanDTO : fromRegisterDto >
+    FlightPlanScheduleResolver ..> FlightPlanSchedule : returns >
+    RegisterFlightPlanService ..> FlightPlanSchedule : uses >
+    RegisterFlightPlanService ..> PilotScheduleConflictService : ensure no overlap >
+    PilotScheduleConflictService ..> FlightPlanSchedule : ensureNoOverlap >
+    RegisterFlightPlanService ..> FlightPlanDslContentGuard : minimum DSL structure >
+    RegisterFlightPlanService ..> Flight : registerOrReplaceFlightPlan >
+    RegisterFlightPlanService ..> FlightRoute : isActiveAt via flight.route() >
+    PilotScheduleConflictService ..> FlightRepository : hasOverlappingScheduleForPilot >
+    PilotScheduleConflictService ..> RepositoryFactory : uses >
+
+    RegisterFlightPlanService ..> FlightRepository : save / find >
+    RegisterFlightPlanService ..> AircraftRepository : find by flight aircraft >
+    RegisterFlightPlanService ..> PilotCertificationRepository : find >
+
+    RegisterFlightPlanService ..> Aircraft : validates via flight assignment >
+    RegisterFlightPlanService ..> PilotCertification : validates >
+
+    RegisterFlightPlanDTO *-- RegisterFlightPlanLegInput : contains >
+    RegisterFlightPlanLegInput *-- RegisterFlightPlanSegmentInput : contains >
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class RegisterFlightPlanAction <<action>> {
+        + execute()
+    }
+
+    class RegisterFlightPlanUI {
+        + show() : boolean
+    }
+
+    RegisterFlightPlanAction ..> RegisterFlightPlanUI
+    RegisterFlightPlanUI ..> RegisterFlightPlanController : uses >
+    RegisterFlightPlanUI ..> RegisterFlightPlanDTO : builds >
+}
+
+note bottom of FlightPlanSchedule
+  Application value object (not a UI DTO).
+  Built by FlightPlanScheduleResolver;
+  consumed by PilotScheduleConflictService
+  for overlap checks. Also used by US081 import.
+end note
+
+note bottom of FlightPlan
+    DSL stored as-is in DslSource.
+    File-loaded DSL: designator match + minimum structure only.
+    US085: markAsValidated() after full DSL validation (separate use case).
+    US081 is file import (separate flow).
+    US082 enriches stored DSL with weather data.
+end note
+
+note right of RegisterFlightPlanService
+  validateFlight: find flight, route.isActiveAt(now),
+  ensureFlightAircraftOperational (flight.aircraftRegistration).
+  validatePilot: returns PilotCertification; controller step discards it.
+  registerFlightPlan: re-validate flight and pilot from dto.pilotId,
+  resolveDslContent, DSL guards (file), route active at schedule departure,
+  pilot overlap (exclude current DRAFT if replacing),
+  registerOrReplaceFlightPlan, applyRegistrationMetadata,
+  flightRepository.save(flight)
+end note
+
+note right of Flight
+  One current operational plan per flight (DRAFT/VALIDATED/ACTIVE).
+  registerOrReplaceFlightPlan cancels previous DRAFT;
+  blocks when VALIDATED or ACTIVE exists.
+end note
+
+@enduml

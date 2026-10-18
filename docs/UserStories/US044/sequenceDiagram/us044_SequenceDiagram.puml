@@ -1,0 +1,141 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+title US044 - Weather Person Remote Access (Sequence Diagram)
+
+actor "Weather Person" as WP
+box "RCOMP Client (C)" #LightBlue
+  participant "WeatherPersonClient" as CLIENT <<client>>
+  participant "ProtocolIO\n(protocol.c)" as PROTO <<client>>
+end box
+box "AISafe Server (Java)" #LightYellow
+  participant "RemoteAccessTcpServer" as TCP <<server>>
+  participant "RemoteConnectionHandler" as HANDLER <<server>>
+  participant "RemoteMessageCodec" as CODEC <<server>>
+  participant "WeatherRemoteCommandHandler" as DISPATCH <<server>>
+  participant "RemoteConnectionContext" as CTX <<server>>
+end box
+box "Application / Infrastructure" #White
+  participant "RegisterWeatherDataController" as CTRL <<application>>
+  database "WeatherDataRepository\n(JPA)" as REPO <<repository>>
+  participant "RemoteAccessUdpLogger" as LOG <<infrastructure>>
+end box
+
+== Connect and authenticate ==
+
+WP -> CLIENT : start client / select login
+activate CLIENT
+
+CLIENT -> PROTO : protocol_connect(host, port)
+PROTO -> TCP : TCP connect (e.g. 9000)
+activate TCP
+TCP -> HANDLER : accept() + submit Runnable
+activate HANDLER
+
+CLIENT -> PROTO : protocol_send_message("LOGIN;email;password")
+PROTO -> HANDLER : framed message on socket
+HANDLER -> CODEC : readMessage(inputStream)
+CODEC --> HANDLER : LOGIN;email;password
+HANDLER -> HANDLER : dispatch() — LOGIN allowed without session
+HANDLER -> DISPATCH : handle(command, context)
+activate DISPATCH
+DISPATCH -> DISPATCH : AuthzRegistry.authenticate(..., WEATHER_PERSON)
+
+alt login success
+    DISPATCH -> CTX : setAuthenticated(email)
+    DISPATCH -> LOG : LOGIN_SUCCESS (US44)
+    DISPATCH --> HANDLER : OK;SESSION;email
+    HANDLER -> CODEC : writeMessage(outputStream, response)
+    CODEC --> PROTO : framed OK;SESSION;email
+    PROTO --> CLIENT : protocol_receive_message()
+    CLIENT -> CLIENT : ResponseParser — print success
+else login failed
+    DISPATCH -> LOG : LOGIN_FAILED (US44)
+    DISPATCH --> HANDLER : ERR;AUTH_FAILED;...
+    HANDLER -> CODEC : writeMessage(response)
+    CODEC --> PROTO : framed ERR;AUTH_FAILED;...
+    PROTO --> CLIENT : protocol_receive_message()
+end
+deactivate DISPATCH
+
+note over CLIENT, TCP
+  Same TCP socket stays open for further commands
+  (one request/response per framed message).
+end note
+
+== Execute remote operation (example: register weather) ==
+
+WP -> CLIENT : option 2 — register weather
+CLIENT -> CLIENT : build REGISTER_WEATHER;... (CommandBuilder)
+CLIENT -> PROTO : protocol_send_message(command)
+PROTO -> HANDLER : framed REGISTER_WEATHER;...
+HANDLER -> CODEC : readMessage()
+CODEC --> HANDLER : command string
+HANDLER -> HANDLER : dispatch() — requires authenticated context
+HANDLER -> DISPATCH : handle(command, context)
+activate DISPATCH
+DISPATCH -> CTRL : registerWeatherData(...)
+activate CTRL
+CTRL -> REPO : save(weatherData)
+REPO --> CTRL : persisted
+CTRL --> DISPATCH : WeatherData
+deactivate CTRL
+DISPATCH --> HANDLER : OK;WEATHER_REGISTERED;id
+deactivate DISPATCH
+HANDLER -> CODEC : writeMessage(response)
+CODEC --> PROTO : framed response
+PROTO --> CLIENT : protocol_receive_message()
+CLIENT -> CLIENT : ResponseParser — print success
+
+== Terminate session (explicit logout) ==
+
+WP -> CLIENT : option 5 — logout
+CLIENT -> PROTO : protocol_send_message("LOGOUT")
+PROTO -> HANDLER : framed LOGOUT
+HANDLER -> CODEC : readMessage()
+CODEC --> HANDLER : LOGOUT
+HANDLER -> DISPATCH : handle(LOGOUT, context)
+activate DISPATCH
+DISPATCH -> DISPATCH : AuthzRegistry.clearSession()
+DISPATCH -> CTX : clearAuthentication()
+DISPATCH -> LOG : LOGOUT (US44)
+DISPATCH --> HANDLER : OK;LOGOUT;email
+deactivate DISPATCH
+HANDLER -> CODEC : writeMessage(response)
+CODEC --> PROTO : framed OK;LOGOUT;email
+PROTO --> CLIENT : protocol_receive_message()
+CLIENT -> CLIENT : ResponseParser — print success
+HANDLER -> HANDLER : exit loop (after OK;LOGOUT)
+deactivate HANDLER
+
+CLIENT -> PROTO : protocol_close(socket)
+PROTO -> TCP : TCP close (client side)
+note right of TCP
+  RemoteAccessTcpServer keeps listening
+  for other clients (not stopped on logout).
+end note
+
+== Optional: abrupt disconnect without logout ==
+
+note over CLIENT, HANDLER
+  Separate scenario: user closes client or network drops
+  **without** sending LOGOUT while still authenticated.
+end note
+
+CLIENT -> PROTO : protocol_close() without LOGOUT
+PROTO -> HANDLER : TCP close / read failure
+activate HANDLER
+HANDLER -> HANDLER : finally — if context.isAuthenticated()
+HANDLER -> LOG : DISCONNECT (US44)
+deactivate HANDLER
+
+deactivate CLIENT
+
+note over TCP
+  RemoteAccessTcpServer remains active (accept loop).
+end note
+
+@enduml

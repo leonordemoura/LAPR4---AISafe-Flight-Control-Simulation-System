@@ -1,0 +1,174 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+title US078 - ATCC Remote Access (Sequence Diagram)
+
+actor "Air Transport Co. Collab." as ATCC
+box "RCOMP Client (C)" #LightBlue
+  participant "ATCCClient" as CLIENT <<client>>
+  participant "ProtocolIO\n(protocol.c)" as PROTO <<client>>
+end box
+box "AISafe Server (Java)" #LightYellow
+  participant "RemoteAccessTcpServer" as TCP <<server>>
+  participant "RemoteConnectionHandler" as HANDLER <<server>>
+  participant "RemoteMessageCodec" as CODEC <<server>>
+  participant "CompositeRemoteCommandHandler" as UNIFIED <<server>>
+  participant "CollaboratorRemoteCommandHandler" as DISPATCH <<server>>
+  participant "RemoteConnectionContext" as CTX <<server>>
+end box
+box "Application / Infrastructure" #White
+  participant "AddAircraftController" as CTRL <<application>>
+  database "AircraftRepository" as REPO <<repository>>
+  participant "RemoteAccessUdpLogger" as LOG <<infrastructure>>
+end box
+
+== Connect and authenticate ==
+
+activate ATCC
+    ATCC -> CLIENT : start client / select login
+    activate CLIENT
+
+        CLIENT -> PROTO : protocol_connect(host, port)
+        activate PROTO
+            PROTO -> TCP : TCP connect (e.g. 9000)
+            activate TCP
+                TCP -> HANDLER : accept() + submit Runnable
+
+                activate HANDLER
+            deactivate TCP
+
+            CLIENT -> PROTO : protocol_send_message("LOGIN;email;password")
+            PROTO -> HANDLER : framed message on socket
+            HANDLER -> CODEC : readMessage(inputStream)
+            activate CODEC
+                CODEC --> HANDLER : LOGIN;email;password
+            deactivate CODEC
+            HANDLER -> UNIFIED : handle(command, context)
+            activate UNIFIED
+                UNIFIED -> DISPATCH : handle(command, context)
+                activate DISPATCH
+                DISPATCH -> DISPATCH : AuthzRegistry.authenticate(..., ATCC_ROLE)
+
+                alt login success
+                    DISPATCH -> CTX : setAuthenticated(email, ATCC_ROLE)
+                    DISPATCH -> LOG : LOGIN_SUCCESS (US78)
+                    DISPATCH --> UNIFIED : OK;SESSION;email;role
+                    UNIFIED --> HANDLER : OK;SESSION;email;role
+                    HANDLER -> CODEC : writeMessage(outputStream, response)
+                    activate CODEC
+                        CODEC --> PROTO : framed OK;SESSION;...
+                    deactivate CODEC
+                    PROTO --> CLIENT : protocol_receive_message()
+                    CLIENT -> CLIENT : ResponseParser — print success
+                else login failed
+                    DISPATCH -> LOG : LOGIN_FAILED (US78)
+                    DISPATCH --> UNIFIED : ERR;AUTH_FAILED;...
+                    UNIFIED --> HANDLER : ERR;AUTH_FAILED;...
+                    HANDLER -> CODEC : writeMessage(response)
+                    activate CODEC
+                        CODEC --> PROTO : framed ERR;AUTH_FAILED;...
+                    deactivate CODEC
+                    PROTO --> CLIENT : protocol_receive_message()
+                end
+                deactivate DISPATCH
+            deactivate UNIFIED
+
+            note over CLIENT, TCP
+              Same TCP socket stays open for further commands
+              (one request/response per framed message).
+            end note
+
+    == Execute remote operation (example: add aircraft) ==
+
+    ATCC -> CLIENT : option 2 — add aircraft
+    CLIENT -> CLIENT : build ADD_AIRCRAFT;... (CommandBuilder)
+    CLIENT -> PROTO : protocol_send_message(command)
+    PROTO -> HANDLER : framed ADD_AIRCRAFT;...
+    HANDLER -> CODEC : readMessage()
+    activate CODEC
+        CODEC --> HANDLER : command string
+    deactivate CODEC
+    HANDLER -> UNIFIED : handle(command, context)
+    activate UNIFIED
+    UNIFIED -> DISPATCH : handle(command, context)
+    activate DISPATCH
+    DISPATCH -> CTRL : addAircraft(...)
+    activate CTRL
+    CTRL -> REPO : save(aircraft)
+    activate REPO
+        REPO --> CTRL : persisted
+    deactivate REPO
+    CTRL --> DISPATCH : Aircraft
+    deactivate CTRL
+    DISPATCH --> UNIFIED : OK;AIRCRAFT_ADDED;id
+    deactivate DISPATCH
+    UNIFIED --> HANDLER : OK;AIRCRAFT_ADDED;id
+    deactivate UNIFIED
+    HANDLER -> CODEC : writeMessage(response)
+    activate CODEC
+        CODEC --> PROTO : framed response
+    deactivate CODEC
+    PROTO --> CLIENT : protocol_receive_message()
+    CLIENT -> CLIENT : ResponseParser — print success
+
+    == Terminate session (explicit logout) ==
+
+    ATCC -> CLIENT : option 4 — logout
+    CLIENT -> PROTO : protocol_send_message("LOGOUT")
+    PROTO -> HANDLER : framed LOGOUT
+    HANDLER -> CODEC : readMessage()
+    activate CODEC
+        CODEC --> HANDLER : LOGOUT
+    deactivate CODEC
+    HANDLER -> UNIFIED : handle(LOGOUT, context)
+    activate UNIFIED
+    UNIFIED -> DISPATCH : handle(LOGOUT, context)
+    activate DISPATCH
+    DISPATCH -> DISPATCH : AuthzRegistry.clearSession()
+    DISPATCH -> CTX : clearAuthentication()
+    DISPATCH -> LOG : LOGOUT (US78)
+    DISPATCH --> UNIFIED : OK;LOGOUT;email
+    deactivate DISPATCH
+    UNIFIED --> HANDLER : OK;LOGOUT;email
+    deactivate UNIFIED
+    HANDLER -> CODEC : writeMessage(response)
+    activate CODEC
+    CODEC --> PROTO : framed OK;LOGOUT;email
+    deactivate CODEC
+    PROTO --> CLIENT : protocol_receive_message()
+    CLIENT -> CLIENT : ResponseParser — print success
+    HANDLER -> HANDLER : exit loop (after OK;LOGOUT)
+    deactivate HANDLER
+
+    CLIENT -> PROTO : protocol_close(socket)
+    PROTO -> TCP : TCP close (client side)
+    note right of TCP
+      RemoteAccessTcpServer keeps listening
+      for other clients (not stopped on logout).
+    end note
+
+    == Optional: abrupt disconnect without logout ==
+
+    note over CLIENT, HANDLER
+      Separate scenario: user closes client or network drops
+      **without** sending LOGOUT while still authenticated.
+    end note
+
+    CLIENT -> PROTO : protocol_close() without LOGOUT
+    PROTO -> HANDLER : TCP close / read failure
+    activate HANDLER
+    HANDLER -> HANDLER : finally — if context.isAuthenticated()
+    HANDLER -> LOG : DISCONNECT (US78)
+    deactivate HANDLER
+
+    deactivate CLIENT
+deactivate ATCC
+
+note over TCP
+  RemoteAccessTcpServer remains active (accept loop).
+end note
+
+@enduml

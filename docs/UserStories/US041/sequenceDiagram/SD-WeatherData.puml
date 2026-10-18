@@ -1,0 +1,172 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Weather Person" as WP
+participant "RegisterWeatherDataUI" as UI <<presentation>>
+participant "RegisterWeatherDataController" as CTRL <<application>>
+database "PersistenceContext" as Persistence <<persistence>>
+database "AppSettings" as AppSettings <<persistence>>
+database "RepositoryFactory" as Factory <<factory>>
+database "AirControlAreaRepository" as ACAR <<repository>>
+database "WeatherDataRepository" as WDR <<repository>>
+participant "WeatherSubArea\n<<Value Object>>" as SUBAREA <<domain>>
+participant "WeatherData\n<<Aggregate Root>>" as DOMAIN <<domain>>
+
+activate WP
+
+WP -> UI : requests to register\nweather data
+activate UI
+
+UI -> WP : asks for area code
+WP -> UI : enters area code
+
+UI -> CTRL : checkAreaCodeExists(areaCode)
+activate CTRL
+
+CTRL -> Persistence : repositories()
+activate Persistence
+Persistence -> AppSettings : instance()
+activate AppSettings
+Persistence -> AppSettings : getRepositoryFactory()
+AppSettings -> Factory : create()
+activate Factory
+Factory --> AppSettings : repositoryFactory
+deactivate Factory
+AppSettings --> Persistence : repositoryFactory
+deactivate AppSettings
+Persistence --> CTRL : repositoryFactory
+deactivate Persistence
+
+CTRL -> Factory : getAirControlAreaRepository()
+activate Factory
+Factory --> CTRL : AirControlAreaRepository
+deactivate Factory
+
+CTRL -> ACAR : findByAreaCode(areaCode)
+activate ACAR
+
+alt area does not exist
+    ACAR --> CTRL : empty
+    CTRL --> UI : error - area not found
+    UI --> WP : displays error message
+
+else area exists
+    ACAR --> CTRL : airControlArea
+    deactivate ACAR
+    CTRL --> UI : area code valid (returns boundary + maxAltitude)
+    deactivate CTRL
+
+    UI -> WP : asks for observation start date/time
+    WP -> UI : enters start date/time
+
+    UI -> WP : asks for observation end date/time
+    WP -> UI : enters end date/time
+
+    UI -> WP : asks for weather source
+    WP -> UI : enters weather source
+
+    UI -> WP : asks for sub-area bounds\n(minLat, maxLat, minLon, maxLon,\nminAlt, maxAlt)
+    WP -> UI : enters sub-area bounds
+
+    UI -> CTRL : validateSubArea(areaCode,\n  minLat, maxLat, minLon, maxLon,\n  minAlt, maxAlt)
+    activate CTRL
+
+    CTRL -> SUBAREA : new WeatherSubArea(minLat, maxLat,\n  minLon, maxLon, minAlt, maxAlt)
+    activate SUBAREA
+    SUBAREA --> CTRL : subArea
+    deactivate SUBAREA
+
+    CTRL -> SUBAREA : subArea.isWithinControlArea(\n  geoBoundary, maxControlAltitude)
+    activate SUBAREA
+
+    alt sub-area outside control area
+        SUBAREA --> CTRL : false
+        deactivate SUBAREA
+        CTRL --> UI : error - sub-area out of bounds
+        UI --> WP : displays error message
+
+    else sub-area valid
+        SUBAREA --> CTRL : true
+        deactivate SUBAREA
+        CTRL --> UI : sub-area valid
+        deactivate CTRL
+
+        UI -> WP : asks for wind direction (degrees)
+        WP -> UI : enters wind direction
+
+        UI -> WP : asks for wind speed unit
+        WP -> UI : selects wind speed unit
+
+        UI -> WP : asks for wind speed
+        WP -> UI : enters wind speed
+
+        UI -> WP : asks for temperature unit
+        WP -> UI : selects temperature unit
+
+        UI -> WP : asks for temperature
+        WP -> UI : enters temperature
+
+        UI -> WP : asks for pressure unit
+        WP -> UI : selects pressure unit
+
+        UI -> WP : asks for pressure
+        WP -> UI : enters pressure
+
+        UI -> CTRL : registerWeatherData(areaCode,\n  observationStartDate, observationEndDate,\n  weatherSource,\n  minLat, maxLat, minLon, maxLon,\n  minAlt, maxAlt,\n  windDirection, windSpeed, windSpeedUnit,\n  temperature, temperatureUnit,\n  pressure, pressureUnit)
+        activate CTRL
+
+        CTRL -> Factory : getWeatherDataRepository()
+        activate Factory
+        Factory --> CTRL : WeatherDataRepository
+        deactivate Factory
+
+        CTRL -> WDR : existsByAreaCodeAndObservationDateAndWeatherSource(\n  areaCode, observationDate, weatherSource)
+        activate WDR
+
+        alt duplicate record
+            WDR --> CTRL : true
+            CTRL --> UI : error - duplicate record
+            UI --> WP : displays error message
+
+        else no duplicate
+            WDR --> CTRL : false
+            deactivate WDR
+
+            CTRL -> DOMAIN : new ObservationDate(observationStartDate,\n  observationEndDate)
+            CTRL -> DOMAIN : new WeatherData(areaCode,\n  observationDate, weatherSource,\n  subArea,\n  windDirection, windSpeed,\n  temperature, pressure)
+            activate DOMAIN
+            note right of DOMAIN
+                Enforced Invariants:
+                - All fields present and valid
+                - ObservationDate.endDateTime > startDateTime
+                - WindDirection: 0 ≤ degrees < 360
+                - WindSpeed ≥ 0
+                - Pressure > 0
+                - WeatherSource not empty
+                - WeatherSubArea within AirControlArea
+                  bounds (geography + altitude)
+            end note
+            DOMAIN --> CTRL : weatherData
+            deactivate DOMAIN
+
+            CTRL -> WDR : save(weatherData)
+            activate WDR
+            WDR --> CTRL : success
+            deactivate WDR
+
+            CTRL --> UI : success
+            deactivate CTRL
+
+            UI --> WP : displays success message
+        end
+    end
+end
+
+deactivate UI
+
+deactivate WP
+
+@enduml

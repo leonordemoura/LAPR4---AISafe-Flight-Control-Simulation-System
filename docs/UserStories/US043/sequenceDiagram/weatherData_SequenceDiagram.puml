@@ -1,0 +1,139 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Weather Person / Pilot /\nFlight Control Operator" as User
+
+participant "ConsultWeatherDataUI" as UI <<presentation>>
+participant "ConsultWeatherDataController" as Controller <<application>>
+participant "ConsultWeatherDataService" as Service <<service>>
+
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+
+database "AirControlAreaRepository" as AreaRepo <<repository>>
+database "WeatherDataRepository" as WeatherRepo <<repository>>
+
+participant "WeatherData\n<<Aggregate Root>>" as WeatherData <<domain>>
+
+activate User
+
+User -> UI : requests weather data consultation
+activate UI
+
+    UI -> Controller : new ConsultWeatherDataController()
+    activate Controller
+
+        Controller -> PC : repositories()
+        activate PC
+
+            PC -> AS : instance()
+            activate AS
+
+                PC -> AS : getRepositoryFactory()
+
+                AS -> RepoFac : create()
+                activate RepoFac
+                    RepoFac --> AS : repositoryFactory
+                deactivate RepoFac
+
+                AS --> PC : repositoryFactory
+            deactivate AS
+
+        PC --> Controller : repositoryFactory
+        deactivate PC
+
+        Controller -> Service : new ConsultWeatherDataService(repositoryFactory)
+        activate Service
+            Service --> Controller : service
+        deactivate Service
+
+        Controller --> UI : controller
+    deactivate Controller
+
+    UI -> Controller : getAvailableAirControlAreas()
+    activate Controller
+
+        Controller -> Service : getAvailableAirControlAreas()
+        activate Service
+
+            Service -> RepoFac : airControlAreas()
+            activate RepoFac
+
+                RepoFac -> AreaRepo : create()
+                activate AreaRepo
+                    AreaRepo --> RepoFac : airControlAreaRepository
+                deactivate AreaRepo
+
+                RepoFac --> Service : airControlAreaRepository
+            deactivate RepoFac
+
+            Service -> AreaRepo : findAll()
+            activate AreaRepo
+                AreaRepo --> Service : airControlAreas
+            deactivate AreaRepo
+
+            Service --> Controller : airControlAreas
+        deactivate Service
+
+        Controller --> UI : airControlAreas
+    deactivate Controller
+
+    UI --> User : displays air control areas
+    User --> UI : selects area
+
+    UI --> User : requests consultation date
+    User --> UI : inserts date
+
+    UI -> Controller : consultWeatherData(areaCode, date)
+    activate Controller
+
+        Controller -> Service : consultWeatherData(areaCode, date)
+        activate Service
+
+            Service -> RepoFac : weatherData()
+            activate RepoFac
+
+                RepoFac -> WeatherRepo : create()
+                activate WeatherRepo
+                    WeatherRepo --> RepoFac : weatherDataRepository
+                deactivate WeatherRepo
+
+                RepoFac --> Service : weatherDataRepository
+            deactivate RepoFac
+
+            Service -> WeatherRepo : findByAreaCodeAndDate(areaCode, date)
+
+            note right of WeatherRepo
+                **Rule**
+                - weather data must exist
+                  for the selected date
+                  and air control area
+            end note
+
+            activate WeatherRepo
+                WeatherRepo --> Service : List<WeatherData>
+            deactivate WeatherRepo
+
+            Service -> WeatherData : toDTO()
+            activate WeatherData
+                WeatherData --> Service : ConsultWeatherDataDTO
+            deactivate WeatherData
+
+            Service --> Controller : List<ConsultWeatherDataDTO>
+        deactivate Service
+
+        Controller --> UI : List<ConsultWeatherDataDTO>
+    deactivate Controller
+
+    UI --> User : displays weather data
+
+deactivate UI
+deactivate User
+
+@enduml

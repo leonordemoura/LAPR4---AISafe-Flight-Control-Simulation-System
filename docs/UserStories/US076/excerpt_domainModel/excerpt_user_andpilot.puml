@@ -1,0 +1,101 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "User Aggregate" {
+
+    class User <<entity>> <<aggregateRoot>> {
+    }
+
+    class SystemUser <<framework entity>> {
+    }
+
+    class Role <<framework vo>> {
+        roleName
+    }
+
+    class AisafeRoles <<utility>> {
+        {static} ADMIN : Role
+        {static} BACKOFFICE_OPERATOR : Role
+        {static} AIR_TRANSPORT_COMPANY_COLLABORATOR : Role
+        {static} PILOT : Role
+        {static} FLIGHT_CONTROL_OPERATOR : Role
+        {static} WEATHER_PERSON : Role
+    }
+
+    class AisafeProfile <<entity>> {
+    }
+
+    class SecurityClearance <<vo>> {
+        expiryDate
+    }
+
+    class SkillsAssessment <<vo>> {
+        lastAssessmentDate
+    }
+
+    class Email <<vo>> {
+        emailAddress
+    }
+
+    class Email_Domains <<vo>> {
+        domain
+    }
+
+    class PhoneNumber <<vo>> {
+        code {*country code*}
+        number
+    }
+
+    class FullName <<vo>> {
+        firstName
+        lastName
+    }
+
+    ' ── DOMAIN USER ─────────────────────────────
+    User "1" *-- "1" Email : identifies >
+    User "1" *-- "1" FullName : has >
+    User "1" *-- "1" PhoneNumber : has >
+    User "1" *-- "0..1" AisafeProfile : has >
+
+    AisafeProfile "1" *-- "1" SecurityClearance
+    AisafeProfile "1" *-- "1" SkillsAssessment
+
+    Email "1" *-- "1" Email_Domains : belongs to >
+
+    ' ── AUTH SYSTEM USER ───────────────────────
+    SystemUser "1" --> "*" Role : assigned >
+    SystemUser "1" --> "1" Email : username/email >
+
+    ' ── LINK (CONCEPTUAL ONLY) ─────────────────
+    User ..> SystemUser : linked by email/username
+
+    AisafeRoles ..> Role
+
+}
+
+package "PilotCertification Aggregate" <<Rectangle>> {
+
+    class PilotCertification <<entity>> <<root>> {
+        active
+    }
+
+    class PilotID <<vo>> {
+        value
+    }
+
+    class ModelCertification <<vo>> {
+        aircraftModelId
+        certificationDate
+    }
+
+    PilotCertification "1" *-- "1" PilotID : identifies >
+    PilotCertification "1" *-- "1" Email
+    ' Relacionamentos PilotCertification
+    PilotCertification "1" -- "1.." ModelCertification : certifiedFor >
+}
+
+PilotCertification ..> SystemUser : matched by email
+@enduml

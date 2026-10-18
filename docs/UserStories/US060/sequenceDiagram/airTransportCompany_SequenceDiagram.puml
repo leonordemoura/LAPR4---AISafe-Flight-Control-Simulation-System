@@ -1,0 +1,97 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "RegisterAirTransportCompanyUI" as UI <<presentation>>
+participant "RegisterAirTransportCompanyController" as Controller <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "AirTransportCompanyRepository" as Repo <<repository>>
+participant "AirTransportCompany\n<<Aggregate Root>>" as AirTransportCompany <<domain>>
+
+activate User
+
+    User -> UI : requests to create an engine model
+    activate UI
+
+        UI --> User : asks for air company transport details
+        User -> UI : provides company details(name, iataCode, icaoCode)
+
+        UI -> Controller : registerAirTransportCompany(name, iataCode, icaoCode)
+        activate Controller
+
+            Controller -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+
+                    activate RepoFac
+                        RepoFac --> AS : repositoryFactory
+                    deactivate RepoFac
+
+                    AS --> PC : repositoryFactory
+                deactivate AS
+
+            PC --> Controller : repositoryFactory
+            deactivate PC
+
+            Controller -> RepoFac: getAirTransportCompanyRepository()
+            activate RepoFac
+                RepoFac -> Repo : create()
+
+                activate Repo
+                    Repo --> RepoFac : airTransportCompanyRepository
+                deactivate Repo
+
+                RepoFac --> Controller : airTransportCompanyRepository
+            deactivate RepoFac
+
+            Controller -> Repo : findByName(name)
+            Note right of Repo: **Enforced Invariant**\n- name is unique
+            activate Repo
+                Repo --> Controller : null
+            deactivate Repo
+
+            Controller -> Repo : findByIataCode(iataCode)
+            Note right of Repo: **Enforced Invariant**\n- iataCode is unique
+            activate Repo
+                Repo --> Controller : null
+            deactivate Repo
+
+            Controller -> Repo : findByIcaoCode(icaoCode)
+            Note right of Repo: **Enforced Invariant**\n- icaoCode is unique
+            activate Repo
+                Repo --> Controller : null
+            deactivate Repo
+
+
+            Controller -> AirTransportCompany : create(name, iataCode, icaoCode)
+            Note right of AirTransportCompany: **Enforced Invariants**\n- name is unique\n- iataCode is unique\n- iataCode is unique
+            activate AirTransportCompany
+                AirTransportCompany --> Controller : airTransportCompany
+            deactivate AirTransportCompany
+
+
+                Controller -> Repo : save(airTransportCompany)
+                activate Repo
+                    Repo --> Controller : success
+                deactivate Repo
+
+            Controller --> UI : output message
+
+        deactivate Controller
+
+        UI --> User : displays message
+    deactivate UI
+
+deactivate User
+
+@enduml

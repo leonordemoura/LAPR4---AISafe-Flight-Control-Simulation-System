@@ -1,0 +1,38 @@
+========= SIMULATION REPORT =========
+Total Flights: 1
+Total Violations: 0
+Violation Threshold: 100
+
+-----------------------------------
+
+FLIGHT HISTORIES:
+
+Flight 1:
+ Time: 09:00 Position: (0.00, 0.00), Altitude: 1000.00
+ Time: 09:01 Position: (0.07, 0.07), Altitude: 1000.00
+ Time: 09:02 Position: (0.14, 0.14), Altitude: 1000.00
+ Time: 09:03 Position: (0.21, 0.21), Altitude: 1000.00
+ Time: 09:04 Position: (0.29, 0.29), Altitude: 1000.00
+ Time: 09:05 Position: (0.36, 0.36), Altitude: 1000.00
+ Time: 09:06 Position: (0.43, 0.43), Altitude: 1000.00
+ Time: 09:07 Position: (0.50, 0.50), Altitude: 1000.00
+ Time: 09:08 Position: (0.57, 0.57), Altitude: 1000.00
+ Time: 09:09 Position: (0.64, 0.64), Altitude: 1000.00
+ Time: 09:10 Position: (0.71, 0.71), Altitude: 1000.00
+ Time: 09:11 Position: (0.79, 0.79), Altitude: 1000.00
+ Time: 09:12 Position: (0.86, 0.86), Altitude: 1000.00
+ Time: 09:13 Position: (0.93, 0.93), Altitude: 1000.00
+ Time: 09:14 Position: (1.00, 1.00), Altitude: 1000.00
+
+-----------------------------------
+
+FLIGHT STATUS:
+
+Flight 1:
+  No violations detected.
+  Performance: 100.00
+
+Simulation completed successfully without reaching the violation threshold.
+SIMULATION SUCCEEDED :)
+
+========= END OF REPORT =========

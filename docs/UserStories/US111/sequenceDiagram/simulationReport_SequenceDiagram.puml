@@ -1,0 +1,167 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Flight Control Operator" as FCO
+
+participant "GenerateSimulationReportUI" as UI <<presentation>>
+participant "GenerateSimulationReportController" as CTRL <<application>>
+participant "GenerateSimulationReportService" as SVC <<service>>
+participant "SimulationReportTextFormatter" as FMT <<application>>
+participant "SimulationReportFileWriter" as WRITER <<application>>
+participant "ScompSimulationResultAdapter" as ADAPTER <<adapter>>
+participant "SimulationRunResultDTO\n<<DTO>>" as DTO <<dto>>
+
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "SimulationReportRepository" as SIM_REPORT_REPO <<repository>>
+
+participant "SimulationReport\n<<Aggregate Root>>" as REPORT <<domain>>
+
+activate FCO
+
+FCO -> UI : open generate simulation report
+activate UI
+
+UI -> CTRL : new GenerateSimulationReportController()
+activate CTRL
+
+CTRL -> PC : repositories()
+activate PC
+PC -> AS : instance()
+activate AS
+PC -> AS : getRepositoryFactory()
+AS -> RepoFac : create()
+activate RepoFac
+RepoFac --> AS : repositoryFactory
+deactivate RepoFac
+AS --> PC : repositoryFactory
+deactivate AS
+PC --> CTRL : repositoryFactory
+deactivate PC
+
+CTRL -> SVC : new GenerateSimulationReportService(repositoryFactory)
+activate SVC
+note right of SVC
+  Service creates ScompSimulationResultAdapter
+  and SimulationReportFileWriter
+end note
+SVC --> CTRL : service
+deactivate SVC
+
+CTRL --> UI : controller ready
+deactivate CTRL
+
+UI -> FCO : (1) ask output directory\n[reports] — folder only
+FCO -> UI : outputDirectory (or Enter for default)
+
+UI -> FCO : (2) ask path to existing\nSCOMP report file (.txt)
+FCO -> UI : simulationLogPath
+
+UI -> CTRL : generateReport(outputDirectory, simulationLogPath)
+activate CTRL
+note right of CTRL : ensureAuthenticatedFlightControlOperator()
+
+CTRL -> RepoFac : newTransactionalContext()
+activate RepoFac
+RepoFac --> CTRL : tx
+deactivate RepoFac
+CTRL -> CTRL : tx.beginTransaction()
+
+CTRL -> SVC : generateReport(outputDirectory, simulationLogPath, tx)
+activate SVC
+
+SVC -> ADAPTER : loadSimulationResult(simulationLogPath)
+activate ADAPTER
+note right of ADAPTER
+  Parses existing SCOMP report_*.txt:
+  totals, FLIGHT HISTORIES,
+  SAFETY VIOLATIONS, FLIGHT STATUS,
+  validationFailure / earlyStop flags
+end note
+
+alt simulation log not available or invalid
+    ADAPTER --> SVC : error (IllegalArgumentException)
+    deactivate ADAPTER
+    SVC --> CTRL : error
+    CTRL -> CTRL : tx.rollback()
+else result loaded
+    ADAPTER -> DTO : SimulationRunResultDTO
+
+    note right of DTO
+      FlightHistorySnapshotDTO + HistoryPointDTO
+      FlightExecutionStatusDTO
+      SafetyViolationEventDTO
+    end note
+    ADAPTER --> SVC : SimulationRunResultDTO
+    deactivate ADAPTER
+
+    SVC -> SVC : buildAggregate(dto)\nresolveValidationStatus(dto)
+    note right of SVC
+      Maps DTOs → domain VOs:
+      FlightHistorySnapshot, HistoryPoint,
+      FlightExecutionStatus, SafetyViolation,
+      ValidationStatus (SUCCEEDED/FAILED/ABORTED)
+    end note
+    SVC -> REPORT : new SimulationReport(...)
+    activate REPORT
+    REPORT --> SVC : report
+    deactivate REPORT
+    deactivate DTO
+
+    SVC -> FMT : format(report)
+    activate FMT
+    FMT --> SVC : report text (SCOMP layout)
+    deactivate FMT
+
+    SVC -> WRITER : write(report text, outputDirectory)
+    activate WRITER
+    note right of WRITER
+      US111.1 — reports/report_YYYY-MM-DD_HH-mm-ss.txt
+      (SCOMP-compatible layout)
+    end note
+    WRITER --> SVC : ReportFilePath
+    deactivate WRITER
+
+    SVC -> REPORT : attachFilePath(path)
+
+    SVC -> RepoFac : simulationReports(tx)
+    activate RepoFac
+    RepoFac --> SVC : simulationReportRepository
+    deactivate RepoFac
+
+    SVC -> SIM_REPORT_REPO : save(report)
+    activate SIM_REPORT_REPO
+    note right of SIM_REPORT_REPO
+      Persists metadata + file path;
+      histories/violations remain in file
+      (@Transient on aggregate)
+    end note
+    SIM_REPORT_REPO --> SVC : persisted report
+    deactivate SIM_REPORT_REPO
+
+    SVC --> CTRL : SimulationReport
+    CTRL -> CTRL : tx.commit()
+end
+
+CTRL -> CTRL : tx.close()
+deactivate SVC
+CTRL --> UI : SimulationReport / error
+deactivate CTRL
+
+UI --> FCO : file path, ValidationStatus,\ntotal flights, total violations
+deactivate UI
+deactivate FCO
+
+note over UI, SIM_REPORT_REPO
+  SCOMP: generate_report() in reportGeneration.c
+  may already write reports/ at end of simulation (US100).
+  AISafe: operator reads that file and produces
+  a new timestamped report under outputDirectory.
+  US109: extended violation sections (velocity vectors).
+end note
+
+@enduml

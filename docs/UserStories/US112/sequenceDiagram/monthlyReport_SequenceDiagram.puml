@@ -1,0 +1,182 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Flight Control Operator" as FCO
+
+participant "GenerateReportUI" as UI <<presentation>>
+participant "GenerateReportController" as CTRL <<application>>
+participant "GenerateReportService" as SVC <<service>>
+participant "ReportFactory" as FACTORY <<domain>>
+participant "MonthlyStatsCollector" as COLLECTOR <<domainService>>
+participant "CompositeReportRenderer" as RENDERER <<adapter>>
+
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "AirControlAreaRepository" as AREA_REPO <<repository>>
+database "ReportRepository" as REPORT_REPO <<repository>>
+database "SimulationReportRepository" as SIM_REPO <<repository>>
+database "FlightRepository" as FLIGHT_REPO <<repository>>
+
+participant "Report\n<<Aggregate Root>>" as REPORT <<domain>>
+
+activate FCO
+
+FCO -> UI : generate monthly statistics report
+    activate UI
+
+        UI -> CTRL : new GenerateReportController()
+        activate CTRL
+
+            CTRL -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+                        activate RepoFac
+                            RepoFac --> AS : repositoryFactory
+                        deactivate RepoFac
+                    AS --> PC : repositoryFactory
+                deactivate AS
+                PC --> CTRL : repositoryFactory
+            deactivate PC
+
+            note right of CTRL
+              buildService():
+              MonthlyStatsCollector(simRepo, flightRepo)
+              ReportFactory(collectors map)
+              CompositeReportRenderer(Pdf, Text)
+            end note
+
+            CTRL --> UI : controller ready
+        deactivate CTRL
+
+        UI -> FCO : select report period (month/year)
+        FCO -> UI : YearMonth (e.g. 2026-06)
+
+        UI -> FCO : asks to select report type
+        FCO -> UI : selects report type
+
+        UI -> CTRL : getAirControlArea()
+        activate CTRL
+            note right of CTRL : ensureAuthenticatedUserHasAnyOf(FLIGHT_CONTROL_OPERATOR)
+            CTRL -> SVC : getAirControlArea(userEmail)
+            activate SVC
+                SVC --> CTRL : areas for operator membership
+            deactivate SVC
+            CTRL --> UI : Iterable<AirControlArea>
+        deactivate CTRL
+        UI -> FCO : shows air control areas available
+        FCO -> UI : selects area code
+
+        UI -> CTRL : generateReport(reportPeriod, reportType, areaCode, outputDirectory)
+            activate CTRL
+                note right of CTRL : ensureAuthenticatedUserHasAnyOf(FLIGHT_CONTROL_OPERATOR)
+
+                CTRL -> RepoFac : newTransactionalContext()
+                    activate RepoFac
+                        RepoFac --> CTRL : txCtx
+                    deactivate RepoFac
+                CTRL -> CTRL : txCtx.beginTransaction()
+
+                CTRL -> SVC : generateReport(period, reportType, areaCode, outputDirectory, userEmail, txCtx)
+                activate SVC
+
+                    SVC -> RepoFac : airControlAreas(txCtx)
+                    activate RepoFac
+                        RepoFac --> SVC : areaRepository
+                    deactivate RepoFac
+
+                    SVC -> AREA_REPO : findByAreaCode(areaCode)
+                    activate AREA_REPO
+
+                    alt area not found
+                        AREA_REPO --> SVC : empty
+                        deactivate AREA_REPO
+                        SVC --> CTRL : IllegalArgumentException
+                        CTRL -> CTRL : txCtx.rollback()
+                    else area found
+                        AREA_REPO --> SVC : AirControlArea
+                        deactivate AREA_REPO
+
+                        SVC -> FACTORY : create(reportType, period, areaCode, userEmail)
+                        activate FACTORY
+
+                        FACTORY -> COLLECTOR : collect(period, areaCode)
+                        activate COLLECTOR
+
+                        COLLECTOR -> FLIGHT_REPO : findByPeriodAndArea(period, areaCode)
+                        activate FLIGHT_REPO
+                        FLIGHT_REPO --> COLLECTOR : List<Flight>
+                        deactivate FLIGHT_REPO
+
+                        note right of COLLECTOR
+                          Extract flight designators from flights.
+                          SimulationReport has no areaCode field;
+                          scope is established via designators.
+                        end note
+
+                        COLLECTOR -> SIM_REPO : findByPeriodAndDesignators(period, designators)
+                        activate SIM_REPO
+                        SIM_REPO --> COLLECTOR : List<SimulationReport>
+                        deactivate SIM_REPO
+
+                        note right of COLLECTOR
+                          Builds ordered List<ReportSection>:
+                          1. Executive Summary
+                          2. Flight Operations Statistics
+                          3. Safety Violations Summary
+                          4. Validation Rate
+                          5. Statistical Charts (ASCII bars)
+                          Computes: totalFlights, totalSimulations,
+                          totalViolations, validationRate
+                        end note
+
+                        COLLECTOR --> FACTORY : List<ReportSection>
+                        deactivate COLLECTOR
+
+                        FACTORY -> REPORT : Report.create(title, period, header,type, areaCode, sections)
+                        activate REPORT
+                        REPORT --> FACTORY : report
+                        deactivate REPORT
+
+                        FACTORY --> SVC : Report
+                        deactivate FACTORY
+
+                        SVC -> RepoFac : reports(txCtx)
+                        activate RepoFac
+                        RepoFac --> SVC : reportRepository
+                        deactivate RepoFac
+
+                        SVC -> REPORT_REPO : save(report)
+                        activate REPORT_REPO
+                        REPORT_REPO --> SVC : persisted report
+                        deactivate REPORT_REPO
+
+                        SVC -> RENDERER : render(report, outputDirectory)
+                        activate RENDERER
+
+                        RENDERER -> RENDERER : PdfReportRenderer.render(report, outputDirectory)
+                        RENDERER -> RENDERER : TextReportRenderer.render(report, outputDirectory)
+
+                        RENDERER --> SVC : primary path (PDF)
+                        deactivate RENDERER
+
+                        SVC --> CTRL : file path
+                        CTRL -> CTRL : txCtx.commit()
+                    end
+
+        CTRL -> CTRL : txCtx.close()
+        deactivate SVC
+        CTRL --> UI : file path / error
+        deactivate CTRL
+
+        UI --> FCO : success message + saved file path
+        deactivate UI
+        deactivate FCO
+
+@enduml

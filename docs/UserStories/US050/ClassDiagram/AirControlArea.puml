@@ -1,0 +1,67 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "aisafe.core" {
+
+    class AirControlArea <<entity>> <<root>> {
+    }
+
+    class AreaCode <<vo>> {
+        - value: String
+    }
+
+    class MinFuelAtArrival <<vo>> {
+        - value: double
+    }
+
+    class MaxAltitude <<vo>> {
+        - value: double
+    }
+
+    class GeoBoundary <<vo>> {
+    }
+
+    class Coordinate <<vo>> {
+        - latitude: double
+        - longitude: double
+    }
+
+    class AreaName <<vo>> {
+        - value: String
+    }
+
+    interface AirControlAreaRepository <<interface>> {
+        + save(area: AirControlArea): AirControlArea
+        + existsByAreaCode(areaCode: AreaCode): boolean
+        + existsByAreaName(areaName: AreaName): boolean
+    }
+
+    class RegisterAirControlAreaController {
+        - factory: RepositoryFactory
+        + registerAirControlArea(areaCode: String,areaName: String,minFuel: Double,boundary: List<GeoBoundary>): AirControlArea
+    }
+
+    AirControlArea "1" *-- "1" AreaName
+    AirControlArea "1" *-- "1" AreaCode
+    AirControlArea "1" *-- "1" MinFuelAtArrival
+    AirControlArea "1" *-- "1" MaxAltitude
+    AirControlArea "1" *-- "1" GeoBoundary
+    GeoBoundary "1" *-- "4" Coordinate
+
+    RegisterAirControlAreaController ..> AirControlArea : creates >
+    RegisterAirControlAreaController ..> AirControlAreaRepository : uses >
+    AirControlAreaRepository ..> AirControlArea : persists >
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class RegisterAirControlAreaUI {
+        - controller: RegisterAirControlAreaController
+        + doShow(): boolean
+    }
+
+    RegisterAirControlAreaUI ..> RegisterAirControlAreaController : uses >
+}
+
+
+@enduml

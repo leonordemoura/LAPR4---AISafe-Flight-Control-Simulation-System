@@ -1,0 +1,93 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as User
+
+participant "DecommissionAircraftUI" as UI <<presentation>>
+participant "DecommissionAircraftController" as CTRL <<application>>
+participant "RepositoryFactory" as Factory <<factory>>
+database "AircraftRepository" as AR <<repository>>
+database "FlightRepository" as FR <<repository>>
+participant "Aircraft\n<<Aggregate Root>>" as DOMAIN <<domain>>
+
+activate User
+
+User -> UI : requests to decommission aircraft
+activate UI
+
+    UI -> CTRL : getAircraftList()
+    activate CTRL
+
+        CTRL -> Factory : getAircraftRepository()
+        activate Factory
+        Factory --> CTRL : AircraftRepository
+        deactivate Factory
+
+        CTRL -> AR : findAll()
+        activate AR
+        AR --> CTRL : aircraft list
+        deactivate AR
+
+    CTRL --> UI : aircraft list
+    deactivate CTRL
+
+User -> UI : selects aircraft (registration)
+
+UI -> CTRL : decommissionAircraft(registration)
+activate CTRL
+
+    CTRL -> Factory : getAircraftRepository()
+    activate Factory
+    Factory --> CTRL : AircraftRepository
+    deactivate Factory
+
+    CTRL -> AR : findByRegistration(registration)
+    activate AR
+    AR --> CTRL : aircraft
+    deactivate AR
+
+    CTRL -> Factory : getFlightRepository()
+    activate Factory
+    Factory --> CTRL : FlightRepository
+    deactivate Factory
+
+    CTRL -> FR : findByAircraftRegistration(registration)
+    activate FR
+    FR --> CTRL : flights
+    deactivate FR
+
+    alt has pending or active flights
+        CTRL --> UI : error - aircraft has pending flights
+        UI --> User : displays error message
+
+    else no pending flights
+        CTRL -> DOMAIN : decommission()
+        activate DOMAIN
+
+        note right of DOMAIN
+            Enforced Invariants:
+            - Aircraft must not be DECOMMISSIONED
+            - Cannot decommission if flights pending
+        end note
+
+        DOMAIN --> CTRL : ok
+        deactivate DOMAIN
+
+        CTRL -> AR : save(aircraft)
+        activate AR
+        AR --> CTRL : success
+        deactivate AR
+
+        CTRL --> UI : success
+        UI --> User : displays success message
+    end
+
+deactivate CTRL
+deactivate UI
+deactivate User
+
+@enduml

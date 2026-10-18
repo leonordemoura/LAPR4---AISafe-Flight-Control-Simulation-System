@@ -1,0 +1,165 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "RegisterCostumerCollaboratorUI" as UI <<presentation>>
+participant "RegisterCostumerCollaboratorController" as Controller <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+participant "RepositoryFactory" as RepoFac <<repository>>
+participant "AirTransportCompanyRepository" as ATCRepo <<repository>>
+participant "AirControlAreaRepository" as ACARepo <<repository>>
+participant "SystemUserRepository" as UserRepo <<repository>>
+participant "MembershipFactory" as Factory <<factory>>
+participant "Costumer" as customer <<interface>>
+
+activate User
+
+    User -> UI : requests to register a costumer's collaborator
+
+    activate UI
+
+        UI --> User : asks for the type of costumer entity
+
+        User -> UI : selects the entity type
+
+        alt Costumer is an Air Transport Company
+            UI --> User : asks for the company's IATA code
+            User -> UI : provides iataCode
+        else Costumer is an Air Control Area
+            UI --> User : asks for the area code
+            User -> UI : provides areaCode
+        end
+
+        UI --> User : asks for the collaborator's email
+
+        User -> UI : provides collaborator email
+
+        UI --> User : asks for the collaborator's position in the costumer entity
+
+        User -> UI : provides collaborator position
+
+        UI -> Controller : registerCostumerCollaborator(entityType, identifier, email, position)
+
+        activate Controller
+
+            Controller -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+                    activate RepoFac
+                        RepoFac --> AS : repositoryFactory
+                    deactivate RepoFac
+                    AS --> PC : repositoryFactory
+                deactivate AS
+                PC --> Controller : repositoryFactory
+            deactivate PC
+
+            Controller -> RepoFac : getSystemUserRepository()
+            activate RepoFac
+                RepoFac -> UserRepo : create()
+                activate UserRepo
+                    UserRepo --> RepoFac : systemUserRepository
+                deactivate UserRepo
+                RepoFac --> Controller : systemUserRepository
+            deactivate RepoFac
+
+            Controller -> UserRepo : findByEmail(email)
+            activate UserRepo
+                UserRepo --> Controller : systemUser
+            deactivate UserRepo
+
+            alt entityType == AIR_TRANSPORT_COMPANY
+
+                Controller -> RepoFac : getAirTransportCompanyRepository()
+                activate RepoFac
+                    RepoFac -> ATCRepo : create()
+                    activate ATCRepo
+                        ATCRepo --> RepoFac : airTransportCompanyRepository
+                    deactivate ATCRepo
+                    RepoFac --> Controller : airTransportCompanyRepository
+                deactivate RepoFac
+
+                Controller -> ATCRepo : findByIataCode(iataCode)
+                activate ATCRepo
+                    ATCRepo --> Controller : airTransportCompany
+                deactivate ATCRepo
+
+                note right of Controller
+                    **customer = airTransportCompany**
+                    **memberType = ATCC (or PILOT)**
+                end note
+
+            else entityType == AIR_CONTROL_AREA
+
+                Controller -> RepoFac : getAirControlAreaRepository()
+                activate RepoFac
+                    RepoFac -> ACARepo : create()
+                    activate ACARepo
+                        ACARepo --> RepoFac : airControlAreaRepository
+                    deactivate ACARepo
+                    RepoFac --> Controller : airControlAreaRepository
+                deactivate RepoFac
+
+                Controller -> ACARepo : findByAreaCode(areaCode)
+                activate ACARepo
+                    ACARepo --> Controller : airControlArea
+                deactivate ACARepo
+
+                note right of Controller
+                    **customer = airControlArea**
+                    **memberType = FCO**
+                end note
+
+            end
+
+            Controller -> Factory : createMembership(customer, systemUser, position)
+            activate Factory
+
+                Factory -> Factory : membership = new Membership(email, role, position)
+
+                Factory -> customer : addMembership(membership)
+                activate customer
+                    note right of customer
+                        **Enforced Invariants**
+                        - systemUser not already a member on that position
+                        - memberType valid for this customer type
+                          (ATC → ATCC or PILOT | ACA → FCO)
+                    end note
+                    customer --> Factory : membership
+                deactivate customer
+
+                Factory --> Controller : membership
+
+            deactivate Factory
+
+            alt entityType == AIR_TRANSPORT_COMPANY
+                Controller -> ATCRepo : save(airTransportCompany)
+                activate ATCRepo
+                    ATCRepo --> Controller : success
+                deactivate ATCRepo
+            else entityType == AIR_CONTROL_AREA
+                Controller -> ACARepo : save(airControlArea)
+                activate ACARepo
+                    ACARepo --> Controller : success
+                deactivate ACARepo
+            end
+
+            Controller --> UI : success message
+
+        deactivate Controller
+
+        UI --> User : displays success message
+
+    deactivate UI
+
+deactivate User
+
+@enduml

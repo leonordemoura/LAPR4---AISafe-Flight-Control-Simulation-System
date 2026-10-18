@@ -1,0 +1,52 @@
+@startuml
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as Actor
+participant "AirTransportCompanyUI" as UI <<presentation>>
+participant "PilotCertificationController" as Controller <<application>>
+database "PilotRepository" as Repo <<repository>>
+participant "PilotCertification\n<<Aggregate Root>>" as Domain <<domain>>
+
+Actor -> UI: request to remove certification
+activate UI
+    UI --> Actor: request pilot and model to remove
+    Actor --> UI: confirm removal
+
+    UI -> Controller: removeCertification(pilotId, aircraftModelId)
+    activate Controller
+
+        Controller -> Repo: findByPilotId(pilotId)
+        activate Repo
+            Repo --> Controller: PilotCertification
+        deactivate Repo
+
+        alt Has more than one certification
+            Controller -> Domain: removeCertification(aircraftModelId)
+            activate Domain
+
+            note right of Domain
+                <b>Enforced Invariant:</b>
+                • Active pilot must have at least one certification
+            end note
+
+            Domain --> Controller: updated PilotCertification
+            deactivate Domain
+
+            Controller -> Repo: save(pilotCertification)
+            activate Repo
+                Repo --> Controller: success
+            deactivate Repo
+
+            Controller --> UI: success
+        else Would leave pilot with zero certifications
+            Controller --> UI: Error: Pilot must have at least one certification
+        end
+
+    deactivate Controller
+
+    UI --> Actor: show result
+deactivate UI
+@enduml

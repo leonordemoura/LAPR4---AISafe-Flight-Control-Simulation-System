@@ -1,0 +1,112 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "backoffice" {
+    package "app"{
+        package "console" {
+            class RegisterCostumerCollaboratorUI <<presentation>>{
+            - controller: RegisterCostumerCollaboratorController
+            + doShow(): boolean
+            }
+        }
+    }
+}
+
+package "core"{
+    class RegisterCostumerCollaboratorController <<controller>>{
+        - factory : RepositoryFactory
+        + registerCostumerCollaborator() : boolean
+    }
+
+    interface Customer <<interface>>
+
+    class MembershipFactory <<factory>>
+
+    class AirTransportCompany <<entity>> <<aggregateRoot>>
+
+    class Membership <<vo>>{
+        - isActive : boolean
+    }
+
+    class Position <<vo>>{
+        - position : String
+    }
+
+    enum MemberType <<enum>>{
+        ATCC
+        PILOT
+        FCO
+    }
+
+    class SystemUser <<entity>> <<aggregateRoot>>
+
+    class FullName <<vo>>{
+        - firstName: String
+        - lastName: String
+    }
+
+    class Email <<vo>>{
+        - emailAddress : String
+    }
+
+    class Email_Domain <<vo>>{
+        - domain : String
+    }
+
+    class PhoneNumber <<vo>>{
+        - code : Integer
+        - number : Integer
+    }
+
+
+
+    class AirControlArea <<entity>> <<aggregateRoot>>
+
+    class AreaCode <<vo>>{
+        - value : String
+    }
+
+
+
+
+    interface AirTransportCompanyRepository <<repository>>
+
+    interface UserRepository <<repository>>
+
+    interface AirControlAreaRepository <<repository>>
+
+    ' ── Customer hierarchy ─────────────────────────────────────────────
+    AirTransportCompany ..|> Customer                                   : implements >
+    AirControlArea ..|> Customer                                        : implements >
+    MembershipFactory ..> Customer                                        : adds Collaborators >
+    MembershipFactory ..> AirTransportCompany                             : instantiates >
+    MembershipFactory ..> AirControlArea                                  : instantiates >
+
+    ' ── Domain relationships (from aggregate) ──────────────────────────
+    AirTransportCompany "1" *-- "0..*" Membership                : has >
+    Membership "1" *-- "1" MemberType                            : typed as >
+    SystemUser "1" *-- "1" FullName                                     : has >
+    SystemUser "1" *-- "1" Email                                        : has >
+    Email "1" *-- "1" Email_Domain                                      : belongs to >
+    SystemUser "1" *-- "1" PhoneNumber                                  : has >
+    AirControlArea "1" *-- "0..*" Membership                        : has >
+    AirControlArea "1" *-- "1" AreaCode                                 : has >
+    SystemUser "1" *-- "1" Membership                           : has >
+    Membership "1" *-- "1" Position                             : has >
+    Membership "1" --> "1" Email                                : has >
+
+    ' ── Repository manages the aggregate ───────────────────────────────
+    AirTransportCompanyRepository ..> AirTransportCompany               : persists >
+    UserRepository ..> SystemUser                                  : persists >
+    AirControlAreaRepository ..> AirControlArea                         : persists >
+
+    ' ── Architecture / layered relationships (from sequence diagram) ───
+    RegisterCostumerCollaboratorUI ..> RegisterCostumerCollaboratorController   : uses >
+    RegisterCostumerCollaboratorController ..> MembershipFactory                  : uses >
+    RegisterCostumerCollaboratorController ..> AirTransportCompanyRepository    : uses >
+    RegisterCostumerCollaboratorController ..> UserRepository             : uses >
+    RegisterCostumerCollaboratorController ..> AirControlAreaRepository         : uses >
+
+}
+
+@enduml

@@ -1,0 +1,136 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as User
+
+participant "ListFleetUI" as UI <<presentation>>
+participant "ListFleetController" as CTRL <<application>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+participant "RepositoryFactory" as Factory <<factory>>
+database "AircraftRepository" as AR <<repository>>
+database "AirTransportCompanyRepository" as CR <<repository>>
+
+activate User
+
+User -> UI : requests fleet listing
+activate UI
+
+    UI -> CTRL : availableCompanies()
+    activate CTRL
+    CTRL -> CR : findAll()
+    activate CR
+    CR --> CTRL : Iterable<AirTransportCompany>
+    deactivate CR
+    CTRL --> UI : Iterable<AirTransportCompany>
+    deactivate CTRL
+
+    UI --> User : displays available companies
+    User -> UI : provides iataCode
+
+    UI --> User : asks which filter to apply
+    User --> UI : selects filter option
+
+    alt no filter
+        UI -> CTRL : getFleet(iataCode)
+        activate CTRL
+    else filter by model
+        UI --> User : asks for model
+        User --> UI : provides model
+        UI -> CTRL : getFleetByModel(iataCode, model)
+
+    else filter by maker
+        UI --> User : asks for maker
+        User --> UI : provides maker
+        UI -> CTRL : getFleetByMaker(iataCode, maker)
+    else filter by min capacity
+        UI --> User : asks for capacity
+        User --> UI : provides capacity
+        UI -> CTRL : getFleetByMinCapacity(iataCode, capacity)
+    else filter by max age
+        UI --> User : asks for age
+        User --> UI : provides age
+        UI -> CTRL : getFleetByMaxAge(iataCode, age)
+    end
+
+    activate CTRL
+
+        CTRL -> PC : repositories()
+        activate PC
+            PC -> AS : instance()
+            activate AS
+                AS -> Factory : create()
+                activate Factory
+                Factory --> AS : repositoryFactory
+                deactivate Factory
+                AS --> PC : repositoryFactory
+            deactivate AS
+        PC --> CTRL : repositoryFactory
+        deactivate PC
+
+        CTRL -> Factory : aircrafts()
+        activate Factory
+        Factory --> CTRL : AircraftRepository
+        deactivate Factory
+
+        CTRL -> Factory : getAirTransportCompanyRepository()
+        activate Factory
+        Factory --> CTRL : AirTransportCompanyRepository
+        deactivate Factory
+
+        CTRL -> CR : findByIataCode(iataCode)
+        activate CR
+        CR --> CTRL : AirTransportCompany
+        deactivate CR
+
+        note right of CTRL
+            Invariant:
+            Can only list aircraft
+            belonging to the given company
+        end note
+
+        alt no filter
+            CTRL -> AR : findByCompany(company)
+            activate AR
+            AR --> CTRL : aircraftList
+            deactivate AR
+
+        else filter by model
+            CTRL -> AR : findByCompanyAndModel(company, model)
+            activate AR
+            AR --> CTRL : aircraftList
+            deactivate AR
+
+        else filter by maker
+            CTRL -> AR : findByCompanyAndMaker(company, maker)
+            activate AR
+            AR --> CTRL : aircraftList
+            deactivate AR
+
+        else filter by min capacity
+            CTRL -> AR : findByCompanyAndMinCapacity(company, capacity)
+            activate AR
+            AR --> CTRL : aircraftList
+            deactivate AR
+
+        else filter by max age
+            CTRL -> AR : findByCompanyAndMaxAge(company, age)
+            activate AR
+            AR --> CTRL : aircraftList
+            deactivate AR
+
+        end
+
+        CTRL --> UI : aircraftList
+    deactivate CTRL
+
+    UI --> User : displays fleet
+deactivate UI
+
+deactivate User
+
+@enduml

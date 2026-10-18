@@ -1,0 +1,120 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "FlightRoute Aggregate" <<Rectangle>> {
+
+    class FlightRoute <<entity>> <<root>>
+
+    class DeactivationDate <<vo>> {
+        value
+    }
+
+    class RouteName <<vo>> {
+        companyIata
+        ' exactly 2 letters
+        number
+        ' 1 to 4 digits (e.g. TP123)
+    }
+
+    class RouteDesignator <<vo>> {
+        origin
+        destination
+    }
+
+    ' Relacionamentos FlightRoute
+    DeactivationDate "1" --* "1" FlightRoute : has <
+    FlightRoute "1" *-- "1" RouteName : identified by >
+    FlightRoute "1" *-- "1" RouteDesignator : has >
+}
+
+package "AirTransportCompany Aggregate" {
+    class AirTransportCompany <<entity>> <<root>> {
+        }
+
+        class CompanyName <<vo>> {
+            value
+        }
+
+        class IataCode <<vo>> {
+            value
+        }
+
+        class IcaoCode <<vo>> {
+            value
+        }
+
+        class Membership <<vo>> {
+            userEmail
+            active
+        }
+
+        enum MemberType <<enum>> {
+            ATCC
+            PILOT
+            FCO
+        }
+
+        class Position <<vo>> {
+            position
+        }
+
+
+        AirTransportCompany "1" *-- "1" CompanyName
+        AirTransportCompany "1" *-- "1" IataCode
+        AirTransportCompany "1" *-- "1" IcaoCode
+        AirTransportCompany "1" -- "0.." Membership : has >
+        Membership "1" *-- "1" MemberType : typed as >
+        Membership "1" --> "1" Position : has >
+}
+
+package "Airport Aggregate" {
+    class Airport <<entity>> <<root>> {
+    }
+
+    class IataCode <<vo>> {
+        value
+    }
+
+    class IcaoCode <<vo>> {
+        value
+    }
+
+    class AirportName <<vo>> {
+        value
+    }
+
+    class Town <<vo>> {
+        value
+    }
+
+    class Country <<vo>> {
+        code
+        name
+    }
+
+    class Elevation <<vo>> {
+        value
+    }
+
+    class Coordinate <<vo>> {
+            latitude
+            longitude
+    }
+
+    ' Relacionamentos Airport
+    Airport "1" *-- "1" IataCode
+    Airport "1" *-- "1" IcaoCode
+    Airport "1" *-- "1" AirportName
+    Airport "1" *-- "1" Town
+    Airport "1" *-- "1" Country
+    Airport "1" *-- "1" Elevation
+    Airport "1" *-- "1" Coordinate : located at >
+}
+
+FlightRoute "1" --> "1" AirTransportCompany : belongs to >
+FlightRoute "1" --> "2" Airport : connects
+
+@enduml

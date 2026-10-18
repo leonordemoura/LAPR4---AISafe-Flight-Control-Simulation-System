@@ -1,0 +1,78 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "backoffice" {
+    package "app"{
+        package "console" {
+            class RegisterFlightRouteUI <<presentation>>{
+                - controller: RegisterFlightRouteController
+                + doShow(): boolean
+            }
+        }
+    }
+}
+
+package "core"{
+    class RegisterFlightRouteController <<controller>>{
+        - service : RegisterFlightRouteService
+        + registerFlightRoute(dto: FlightRouteDTO) : void
+        + getAvailableAirports() : Iterable<Airport>
+    }
+
+    class RegisterFlightRouteService <<service>>{
+        - flightRouteRepository : FlightRouteRepository
+        - airportRepository : AirportRepository
+        - airTransportCompanyRepository : AirTransportCompanyRepository
+        + registerFlightRoute(dto: FlightRouteDTO) : void
+        + getAvailableAirports() : Iterable<Airport>
+    }
+
+    class FlightRouteDTO <<dto>>{
+        + routeName : String
+        + originIataCode : String
+        + destinationIataCode : String
+    }
+
+    class FlightRoute <<entity>> <<aggregateRoot>>
+
+    class RouteName <<vo>>{
+        - companyIata: String
+        - number : int
+    }
+
+    class RouteDesignator <<vo>>{
+        - origin: String
+        - destination: String
+    }
+
+    class Airport <<entity>> <<aggregateRoot>>
+
+    class AirTransportCompany <<entity>> <<aggregateRoot>>
+
+    interface FlightRouteRepository <<repository>>
+    interface AirTransportCompanyRepository <<repository>>
+    interface AirportRepository <<repository>>
+
+    ' ── Domain relationships ──────────────────────────
+    FlightRoute "1" *-- "1" RouteName               : named >
+    FlightRoute "1" *-- "1" RouteDesignator         : defines >
+    AirTransportCompany "1" *-- "*" FlightRoute     : owns >
+    Airport "2" *-- "1..*" FlightRoute              : connects >
+
+    ' ── Repository relationships ─────────────────────
+    FlightRouteRepository ..> FlightRoute                     : persists >
+    AirTransportCompanyRepository ..> AirTransportCompany     : persists >
+    AirportRepository ..> Airport                             : persists >
+
+    ' ── Architecture relationships ───────────────────
+    RegisterFlightRouteUI ..> RegisterFlightRouteController         : uses >
+    RegisterFlightRouteUI ..> FlightRouteDTO                        : creates >
+    RegisterFlightRouteController ..> RegisterFlightRouteService    : uses >
+    RegisterFlightRouteController ..> FlightRouteDTO                : uses >
+    RegisterFlightRouteService ..> FlightRoute                      : creates >
+    RegisterFlightRouteService ..> FlightRouteRepository            : uses >
+    RegisterFlightRouteService ..> AirTransportCompanyRepository    : uses >
+    RegisterFlightRouteService ..> AirportRepository                : uses >
+    RegisterFlightRouteService ..> FlightRouteDTO                   : uses >
+}
+@enduml

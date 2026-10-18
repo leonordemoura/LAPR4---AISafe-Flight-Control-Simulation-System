@@ -1,0 +1,41 @@
+========= SIMULATION REPORT =========
+Total Flights: 2
+Total Violations: 1
+Violation Threshold: 100
+
+-----------------------------------
+
+FLIGHT HISTORIES:
+
+Flight 1:
+ Time: 09:00 Position: (0.00, 0.00), Altitude: 1000.00
+
+Flight 2:
+ Time: 09:00 Position: (0.10, 0.10), Altitude: 1000.00
+
+-----------------------------------
+
+SAFETY VIOLATIONS:
+
+Violation #1:
+  Time: 09:05
+  Horizontal Distance: 0.5000, Vertical Distance: 100.0000
+  Flight 1: Position: (1.00, 2.00), Altitude: 1000.00, Velocity Vector (1.00, 0.00, 0.00) Time: 09:05
+  Flight 2: Position: (3.00, 4.00), Altitude: 1100.00, Velocity Vector (0.00, 1.00, 0.00) Time: 09:05
+
+-----------------------------------
+
+FLIGHT STATUS:
+
+Flight 1:
+  Total Violations: 1
+  Performance: 95.00
+
+Flight 2:
+  No violations detected.
+  Performance: 100.00
+
+Simulation completed successfully without reaching the violation threshold.
+SIMULATION SUCCEEDED :)
+
+========= END OF REPORT =========

@@ -1,0 +1,77 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as Actor
+participant ":RegisterAircraftModelUI" as UI <<presentation>>
+participant ":RegisterAircraftModelController" as Ctrl <<application>>
+participant ":AuthorizationService" as Authz <<application>>
+database ":RepositoryFactory" as RepoFac <<repository>>
+database ":AircraftModelRepository" as AircraftRepo <<persistence>>
+database ":EngineModelRepository" as EngineRepo <<persistence>>
+database ":MakerRepository" as MakerRepo <<persistence>>
+
+participant "maker:Maker" as Maker <<domain>>
+participant "engines:List<EngineModel>" as Engines <<domain>>
+participant "model:AircraftModel" as Domain <<domain>>
+
+Actor -> UI : requests register aircraft model
+activate UI
+
+UI -> Ctrl : registerAircraftModel(name, makerId, engineIds, specs, type, maximumSeats)
+activate Ctrl
+
+' AUTH
+Ctrl -> Authz : ensureAuthenticatedUserHasAnyOf(BACKOFFICE_OPERATOR)
+Authz --> Ctrl : ok
+
+' REPOS
+Ctrl -> RepoFac : aircraftModels()
+RepoFac --> Ctrl : aircraftRepo
+
+Ctrl -> RepoFac : getEngineModelRepository()
+RepoFac --> Ctrl : engineRepo
+
+Ctrl -> RepoFac : getMakerRepository()
+RepoFac --> Ctrl : makerRepo
+
+' MAKER
+Ctrl -> MakerRepo : findByID(makerId)
+MakerRepo --> Ctrl : maker
+
+' UNIQUE CHECK
+Ctrl -> AircraftRepo : existsByNameAndMaker(name, maker)
+AircraftRepo --> Ctrl : exists?
+
+alt not exists
+
+    ' ENGINES LOAD
+    Ctrl -> EngineRepo : ofIdentity(engineIds)
+    EngineRepo --> Ctrl : engines
+
+    note right of Ctrl
+      Validations:
+      - at least 1 engine
+      - all engines same motorization type
+    end note
+
+    ' DOMAIN CREATION
+    Ctrl -> Domain : new AircraftModel(id, name, maker, engines, specs, type, maximumSeats)
+    Domain --> Ctrl : aircraftModel
+
+    ' PERSISTENCE
+    Ctrl -> AircraftRepo : save(aircraftModel)
+    AircraftRepo --> Ctrl : saved
+
+    Ctrl --> UI : success
+
+else exists
+    Ctrl --> UI : error "already exists"
+end
+
+UI --> Actor : result
+deactivate Ctrl
+deactivate UI
+
+@enduml

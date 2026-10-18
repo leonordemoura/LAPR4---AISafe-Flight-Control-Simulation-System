@@ -1,0 +1,110 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Admin / Backoffice Operator" as Actor
+participant ":UpdateAlsafeProfileUI" as UI <<presentation>>
+participant ":UpdateAlsafeProfileController" as Ctrl <<application>>
+participant ":PersistenceContext" as PC <<persistence>>
+participant ":RepositoryFactory" as RepoFac <<repository>>
+participant ":UserRepository" as Repo <<persistence>>
+participant "user:User" as User <<domain>>
+participant "profile:AlsafeProfile" as Profile <<domain>>
+participant "clearance:SecurityClearance" as Clearance <<domain>>
+participant "assessment:SkillsAssessment" as Assessment <<domain>>
+
+' =========================
+' UI FLOW
+' =========================
+Actor -> UI : updateAlsafeProfile()
+activate UI
+
+UI -> Actor : list users
+Actor -> UI : selects userId
+
+UI -> Actor : asks clearance expiry date
+Actor -> UI : provides date
+
+UI -> Actor : asks assessment date
+Actor -> UI : provides date
+
+UI -> Ctrl : attachProfileToUser(userId, clearance, assessment)
+activate Ctrl
+
+' =========================
+' REPOSITORY ACCESS
+' =========================
+Ctrl -> PC : repositories()
+activate PC
+PC --> Ctrl : repositoryFactory
+deactivate PC
+
+Ctrl -> RepoFac : userManagementUsers()
+activate RepoFac
+RepoFac --> Ctrl : userRepository
+deactivate RepoFac
+
+' =========================
+' LOAD USER
+' =========================
+Ctrl -> Repo : ofIdentity(userId)
+activate Repo
+Repo --> Ctrl : user
+deactivate Repo
+
+alt user not found
+    Ctrl --> UI : error "User not found"
+else user found
+
+    ' =========================
+    ' DOMAIN CREATION
+    ' =========================
+    Ctrl -> Clearance : create(expiryDate)
+    activate Clearance
+    Clearance --> Ctrl : clearance
+    deactivate Clearance
+
+    Ctrl -> Assessment : create(date)
+    activate Assessment
+    Assessment --> Ctrl : assessment
+    deactivate Assessment
+
+    Ctrl -> Profile : create(clearance, assessment)
+    activate Profile
+        Profile -> Profile : ensureSecurityReadiness()
+
+        note right of Profile
+        Invariants:
+        - clearance must be valid
+        - assessment must be within 5 years
+        end note
+
+    Profile --> Ctrl : profile
+    deactivate Profile
+
+    ' =========================
+    ' ATTACH TO AGGREGATE
+    ' =========================
+    Ctrl -> User : attachAlsafeProfile(profile)
+    activate User
+        User -> User : validate non-null profile
+    User --> Ctrl
+    deactivate User
+
+    ' =========================
+    ' SAVE
+    ' =========================
+    Ctrl -> Repo : save(user)
+    activate Repo
+    Repo --> Ctrl : saved user
+    deactivate Repo
+
+    Ctrl --> UI : success message
+end
+
+deactivate Ctrl
+UI --> Actor : display result
+deactivate UI
+
+@enduml

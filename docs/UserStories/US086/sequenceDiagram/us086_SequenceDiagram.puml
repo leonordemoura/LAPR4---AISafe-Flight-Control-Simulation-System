@@ -1,0 +1,142 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+title US086 - Pilot Remote Access (Sequence Diagram)
+
+actor "Pilot" as PILOT
+
+box "RCOMP Client (C)" #LightBlue
+  participant "PilotClient" as CLIENT <<client>>
+  participant "ProtocolIO" as PROTO <<client>>
+end box
+
+box "AISafe Server (Java)" #LightYellow
+  participant "RemoteAccessTcpServer" as TCP <<server>>
+  participant "RemoteConnectionHandler" as HANDLER <<server>>
+  participant "RemoteMessageCodec" as CODEC <<server>>
+  participant "CompositeRemoteCommandHandler" as COMPOSITE <<server>>
+  participant "PilotRemoteCommandHandler" as DISPATCH <<server>>
+  participant "RemoteConnectionContext" as CTX <<server>>
+end box
+
+box "Application / Infrastructure" #White
+  participant "RegisterFlightPlanController" as REG_CTRL <<application>>
+  participant "ImportFlightPlanFromFileController" as IMP_CTRL <<application>>
+  participant "RemoteAccessUdpLogger" as LOG <<infrastructure>>
+end box
+
+== Connect and authenticate ==
+
+PILOT -> CLIENT : start client / select login
+activate CLIENT
+
+CLIENT -> PROTO : protocol_connect(host, port)
+PROTO -> TCP : TCP connect (port 9000, shared server)
+activate TCP
+TCP -> HANDLER : accept() + submit Runnable
+activate HANDLER
+
+CLIENT -> PROTO : protocol_send_message("LOGIN;email;password;PILOT")
+PROTO -> HANDLER : framed message
+HANDLER -> CODEC : readMessage()
+CODEC --> HANDLER : LOGIN;email;password;PILOT
+HANDLER -> COMPOSITE : handle(command, context)
+activate COMPOSITE
+COMPOSITE -> DISPATCH : handle (role hint PILOT)
+activate DISPATCH
+DISPATCH -> DISPATCH : authenticate(..., PILOT)
+
+alt login success
+    DISPATCH -> CTX : setAuthenticated(email, PILOT, US86)
+    DISPATCH -> LOG : LOGIN_SUCCESS (US86)
+    DISPATCH --> COMPOSITE : OK;SESSION;email
+    COMPOSITE --> HANDLER : OK;SESSION;email
+    HANDLER -> CODEC : writeMessage(response)
+    CODEC --> PROTO : framed OK;SESSION;email
+    PROTO --> CLIENT : protocol_receive_message()
+else login failed
+    DISPATCH -> LOG : LOGIN_FAILED (US86)
+    DISPATCH --> COMPOSITE : ERR;AUTH_FAILED;...
+    COMPOSITE --> HANDLER : ERR;AUTH_FAILED;...
+    HANDLER -> CODEC : writeMessage(response)
+    CODEC --> PROTO : framed ERR;AUTH_FAILED;...
+    PROTO --> CLIENT : protocol_receive_message()
+end
+deactivate DISPATCH
+deactivate COMPOSITE
+
+== Execute remote operation (US080 example) ==
+
+PILOT -> CLIENT : option - register flight plan
+CLIENT -> CLIENT : build REGISTER_FLIGHT_PLAN;...params...
+CLIENT -> PROTO : protocol_send_message(command)
+PROTO -> HANDLER : framed REGISTER_FLIGHT_PLAN
+HANDLER -> CODEC : readMessage()
+HANDLER -> COMPOSITE : handle(command, context)
+activate COMPOSITE
+COMPOSITE -> DISPATCH : handle (pilot command)
+activate DISPATCH
+DISPATCH -> REG_CTRL : registerFlightPlan(dto)
+REG_CTRL --> DISPATCH : Flight
+DISPATCH --> COMPOSITE : OK;FLIGHT_PLAN_REGISTERED;flightDesignator
+deactivate DISPATCH
+COMPOSITE --> HANDLER : OK;FLIGHT_PLAN_REGISTERED;flightDesignator
+deactivate COMPOSITE
+HANDLER -> CODEC : writeMessage(response)
+CODEC --> PROTO : framed response
+PROTO --> CLIENT : protocol_receive_message()
+
+== Execute remote operation (US081 example) ==
+
+PILOT -> CLIENT : option - import flight plan file
+CLIENT -> CLIENT : build IMPORT_FLIGHT_PLAN_FILE;...params...
+CLIENT -> PROTO : protocol_send_message(command)
+PROTO -> HANDLER : framed IMPORT_FLIGHT_PLAN_FILE
+HANDLER -> CODEC : readMessage()
+HANDLER -> COMPOSITE : handle(command, context)
+activate COMPOSITE
+COMPOSITE -> DISPATCH : handle (pilot command)
+activate DISPATCH
+DISPATCH -> IMP_CTRL : importFlightPlanFromFile(designator, path)
+IMP_CTRL --> DISPATCH : ImportFlightPlanResult
+DISPATCH --> COMPOSITE : OK;FLIGHT_PLAN_IMPORTED;... / ERR;VALIDATION_ERROR;...
+deactivate DISPATCH
+COMPOSITE --> HANDLER : response
+deactivate COMPOSITE
+HANDLER -> CODEC : writeMessage(response)
+CODEC --> PROTO : framed response
+PROTO --> CLIENT : protocol_receive_message()
+
+== Terminate session ==
+
+PILOT -> CLIENT : option - logout
+CLIENT -> PROTO : protocol_send_message("LOGOUT")
+PROTO -> HANDLER : framed LOGOUT
+HANDLER -> CODEC : readMessage()
+HANDLER -> COMPOSITE : handle(LOGOUT, context)
+activate COMPOSITE
+COMPOSITE -> DISPATCH : handle (session role PILOT)
+activate DISPATCH
+DISPATCH -> CTX : clearAuthentication()
+DISPATCH -> LOG : LOGOUT (US86)
+DISPATCH --> COMPOSITE : OK;LOGOUT;email
+deactivate DISPATCH
+COMPOSITE --> HANDLER : OK;LOGOUT;email
+deactivate COMPOSITE
+HANDLER -> CODEC : writeMessage(response)
+CODEC --> PROTO : framed OK;LOGOUT;email
+PROTO --> CLIENT : protocol_receive_message()
+HANDLER -> HANDLER : end loop and close connection
+deactivate HANDLER
+deactivate TCP
+deactivate CLIENT
+
+note over HANDLER, LOG
+  DISCONNECT is logged only when socket closes while
+  context is still authenticated (abrupt disconnect).
+end note
+
+@enduml

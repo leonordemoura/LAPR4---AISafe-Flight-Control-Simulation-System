@@ -1,0 +1,292 @@
+{
+  "Flights": [
+    {
+      "ID": 111111,
+      "Type": "regular",
+      "Route": "XX001",
+      "DepartureDate": "2026-06-15",
+      "DepartureTime": "09:00",
+      "Leg": [
+        {
+          "Departure": "LIS",
+          "Arrival": "MUC",
+          "Fuel": {
+            "Quantity": 5000,
+            "Unit": "kg"
+          },
+          "FlightProfile": {
+            "Climb": [
+              {
+                "Altitude": {
+                  "Value": 0,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 210,
+                  "Unit": "Knots"
+                },
+                "RateClimb": {
+                  "Value": 12.0,
+                  "Unit": "m/s"
+                }
+              },
+              {
+                "Altitude": {
+                  "Value": 12000,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 300,
+                  "Unit": "Knots"
+                },
+                "RateClimb": {
+                  "Value": 6.0,
+                  "Unit": "m/s"
+                }
+              }
+            ],
+            "Descend": [
+              {
+                "Altitude": {
+                  "Value": 12000,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 300,
+                  "Unit": "Knots"
+                },
+                "RateDescent": {
+                  "Value": -10,
+                  "Unit": "m/s"
+                }
+              },
+              {
+                "Altitude": {
+                  "Value": 0,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 140,
+                  "Unit": "Knots"
+                },
+                "RateDescent": {
+                  "Value": -5,
+                  "Unit": "m/s"
+                }
+              }
+            ],
+            "Cruise": {
+              "Speed": {
+                "Value": 460,
+                "Unit": "Knots"
+              }
+            }
+          },
+          "Segments": [
+            {
+              "Mode": "climb",
+              "Start": {
+                "Latitude": 43.0,
+                "Longitude": 3.58,
+                "Altitude": {
+                  "Quantity": 100,
+                  "Unit": "m"
+                }
+              },
+              "End": {
+                "Latitude": 45.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              }
+            },
+            {
+              "Mode": "cruise",
+              "Start": {
+                "Latitude": 45.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              },
+              "End": {
+                "Latitude": 48.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              }
+            },
+            {
+              "Mode": "descend",
+              "Start": {
+                "Latitude": 48.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              },
+              "End": {
+                "Latitude": 48.3,
+                "Longitude": 11.7,
+                "Altitude": {
+                  "Quantity": 453,
+                  "Unit": "m"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ID": 222222,
+      "Type": "regular",
+      "Route": "XX002",
+      "DepartureDate": "2026-06-15",
+      "DepartureTime": "09:00",
+      "Leg": [
+        {
+          "Departure": "MAD",
+          "Arrival": "VIE",
+          "Fuel": {
+            "Quantity": 5000,
+            "Unit": "kg"
+          },
+          "FlightProfile": {
+            "Climb": [
+              {
+                "Altitude": {
+                  "Value": 0,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 210,
+                  "Unit": "Knots"
+                },
+                "RateClimb": {
+                  "Value": 12.0,
+                  "Unit": "m/s"
+                }
+              },
+              {
+                "Altitude": {
+                  "Value": 12000,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 300,
+                  "Unit": "Knots"
+                },
+                "RateClimb": {
+                  "Value": 6.0,
+                  "Unit": "m/s"
+                }
+              }
+            ],
+            "Descend": [
+              {
+                "Altitude": {
+                  "Value": 12000,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 300,
+                  "Unit": "Knots"
+                },
+                "RateDescent": {
+                  "Value": -10,
+                  "Unit": "m/s"
+                }
+              },
+              {
+                "Altitude": {
+                  "Value": 0,
+                  "Unit": "m"
+                },
+                "Speed": {
+                  "Value": 140,
+                  "Unit": "Knots"
+                },
+                "RateDescent": {
+                  "Value": -5,
+                  "Unit": "m/s"
+                }
+              }
+            ],
+            "Cruise": {
+              "Speed": {
+                "Value": 460,
+                "Unit": "Knots"
+              }
+            }
+          },
+          "Segments": [
+            {
+              "Mode": "climb",
+              "Start": {
+                "Latitude": 43.0,
+                "Longitude": 6.42,
+                "Altitude": {
+                  "Quantity": 100,
+                  "Unit": "m"
+                }
+              },
+              "End": {
+                "Latitude": 45.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              }
+            },
+            {
+              "Mode": "cruise",
+              "Start": {
+                "Latitude": 45.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              },
+              "End": {
+                "Latitude": 48.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              }
+            },
+            {
+              "Mode": "descend",
+              "Start": {
+                "Latitude": 48.0,
+                "Longitude": 5.0,
+                "Altitude": {
+                  "Quantity": 12000,
+                  "Unit": "m"
+                }
+              },
+              "End": {
+                "Latitude": 48.2,
+                "Longitude": 16.37,
+                "Altitude": {
+                  "Quantity": 183,
+                  "Unit": "m"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

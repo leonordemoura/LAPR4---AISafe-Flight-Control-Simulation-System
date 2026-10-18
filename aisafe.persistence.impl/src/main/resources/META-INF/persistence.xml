@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="AI_SAFE">
+
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+
+        <class>aiSafe.aircontrolarea.domain.AirControlArea</class>
+        <class>aiSafe.usermanagement.domain.User</class>
+
+        <class>eapli.framework.infrastructure.authz.domain.model.SystemUser</class>
+        <class>eapli.framework.infrastructure.authz.domain.model.Role</class>
+        <class>eapli.framework.infrastructure.authz.domain.model.RoleSet</class>
+        <class>eapli.framework.infrastructure.authz.domain.model.RoleAssignment</class>
+
+        <class>aiSafe.aircraftmanagement.domain.EngineModel</class>
+        <class>aiSafe.aircraftmanagement.domain.FuelType</class>
+        <class>aiSafe.aircraftmanagement.domain.Maker</class>
+
+        <class>aiSafe.airtransportcompany.domain.AirTransportCompany</class>
+
+        <class>aiSafe.aircraft.domain.Aircraft</class>
+
+        <class>aiSafe.aircraftModel.domain.AircraftModel</class>
+        <class>aiSafe.weatherdata.domain.WeatherData</class>
+        <class>aiSafe.airport.domain.Airport</class>
+
+        <class>aiSafe.PilotCertification.domain.PilotCertification</class>
+
+        <class>aiSafe.flight.domain.Flight</class>
+        <class>aiSafe.flight.domain.FlightPlan</class>
+        <class>aiSafe.flightRoute.domain.FlightRoute</class>
+        <class>aiSafe.simulationreport.domain.SimulationReport</class>
+        <class>aiSafe.reportGeneration.domain.Report</class>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://vsgate-s1.dei.isep.ipp.pt:10271/postgres"/>
+            <property name="jakarta.persistence.jdbc.user" value="postgres"/>
+            <property name="jakarta.persistence.jdbc.password" value="2qcx40Jm+Dbp"/>
+
+            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+        </properties>
+
+    </persistence-unit>
+
+</persistence>

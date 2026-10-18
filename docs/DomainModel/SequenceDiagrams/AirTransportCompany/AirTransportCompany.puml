@@ -1,0 +1,54 @@
+@startuml "registerAirTransportCompany_SD"
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as User
+participant "AirTransportCompanyUI" as UI <<presentation>>
+participant "AirTransportCompanyController" as Controller <<application>>
+database "AirTransportCompanyRepository" as Repo <<repository>>
+participant "AirTransportCompany\n<<Aggregate Root>>" as AirTransportCompany <<domain>>
+
+activate User
+
+    User -> UI : requests to create an air transport company
+    activate UI
+        UI --> User : asks for company details
+        User -> UI : enters company details (name, iataCode, icaoCode)
+
+        UI -> Controller : registerCompany(name, iataCode, icaoCode)
+        activate Controller
+
+            Controller -> Repo : existsByNameOrIataOrIcao(name, iataCode, icaoCode)
+            activate Repo
+                Repo --> Controller : true / false
+            deactivate Repo
+
+            alt identifiers are unique
+                Controller -> AirTransportCompany : create(name, iataCode, icaoCode)
+                Note right of AirTransportCompany: **Enforced Invariants**\n- company name must be unique\n- IATA code must be unique\n- ICAO code must be unique
+                activate AirTransportCompany
+                    AirTransportCompany --> Controller : company
+                deactivate AirTransportCompany
+
+                Controller -> Repo : save(company)
+                activate Repo
+                    Repo --> Controller : success
+                deactivate Repo
+
+                Controller --> UI : success message
+            else identifiers already exist
+                Controller --> UI : error message indicating identifiers already exist
+            end
+
+        deactivate Controller
+
+        UI --> User : displays message
+    deactivate UI
+
+deactivate User
+
+@enduml

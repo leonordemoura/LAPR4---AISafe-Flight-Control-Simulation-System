@@ -1,0 +1,214 @@
+@startuml
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Air Transport Company Collaborator" as User
+participant "DeactivateFlightRouteUI" as UI <<presentation>>
+participant "DeactivateFlightRouteController" as Controller <<application>>
+participant "DeactivateFlightRouteService" as Service <<service>>
+participant "FlightRouteDTO" as DTO <<dto>>
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "FlightRouteRepository" as RouteRepo <<repository>>
+database "AirTransportCompanyRepository" as ATCRepo <<repository>>
+database "FlightRepository" as FlightRepo <<repository>>
+participant "AirTransportCompany\n<<Aggregate Root>>" as ATC <<domain>>
+participant "FlightRoute\n<<Aggregate Root>>" as FlightRoute <<domain>>
+participant "Flight\n<<Aggregate Root>>" as Flight <<domain>>
+participant "FlightPlan\n<<entity>>" as FP <<domain>>
+
+activate User
+
+    User -> UI : requests to deactivate a flight route
+    activate UI
+        UI -> Controller : new DeactivateFlightRouteController()
+        activate Controller
+
+            Controller -> PC : repositories()
+            activate PC
+                PC -> AS : instance()
+                activate AS
+                    PC -> AS : getRepositoryFactory()
+                    AS -> RepoFac : create()
+                    activate RepoFac
+                        RepoFac --> AS : repositoryFactory
+                    deactivate RepoFac
+                    AS --> PC : repositoryFactory
+                deactivate AS
+            PC --> Controller : repositoryFactory
+            deactivate PC
+
+            Controller -> Service : new DeactivateFlightRouteService(repositoryFactory)
+            activate Service
+                Service --> Controller : service
+            deactivate Service
+
+            Controller --> UI : controller
+        deactivate Controller
+
+        UI -> Controller : getActiveRoutes(userEmail)
+        activate Controller
+            Controller -> Service : getActiveRoutes(userEmail)
+            activate Service
+                Service -> RepoFac : getAirTransportCompanyRepository()
+                activate RepoFac
+                    RepoFac --> Service : airTransportCompanyRepository
+                deactivate RepoFac
+
+                Service -> ATCRepo : findByCollaboratorEmail(userEmail)
+                activate ATCRepo
+                    ATCRepo --> Service : collaboratorCompany
+                deactivate ATCRepo
+
+                Service -> RepoFac : flightRoutes()
+                activate RepoFac
+                    RepoFac --> Service : flightRouteRepository
+                deactivate RepoFac
+
+                Service -> RouteRepo : findActiveRoutesByCompanyAndDate(collaboratorCompany, currentDate)
+                activate RouteRepo
+                    RouteRepo --> Service : routes
+                deactivate RouteRepo
+
+                Service --> Controller : routes
+            deactivate Service
+            Controller --> UI : routes
+        deactivate Controller
+
+        UI --> User : displays numbered routes list
+        User -> UI : selects route by index
+
+        UI -> DTO : new FlightRouteDTO(route)
+        activate DTO
+            DTO --> UI : dto
+        deactivate DTO
+
+        UI --> User : asks for deactivation date
+        User -> UI : inputs deactivation date
+
+        UI -> Controller : deactivateFlightRoute(dto, deactivationDate)
+        activate Controller
+        note right of Controller: ensureAuthenticatedUserHasAnyOf(AIR_TRANSPORT_COMPANY_COLLABORATOR)
+
+            Controller -> RepoFac : newTransactionalContext()
+            activate RepoFac
+                RepoFac --> Controller : tx
+            deactivate RepoFac
+            Controller -> Controller : tx.beginTransaction()
+
+            Controller -> Service : deactivateFlightRoute(dto, deactivationDate, userEmail, tx)
+            activate Service
+
+                Service -> Service : divideRouteName(dto.routeName, routePrefix)
+
+                Service -> RepoFac : getAirTransportCompanyRepository(tx)
+                activate RepoFac
+                    RepoFac --> Service : airTransportCompanyRepository
+                deactivate RepoFac
+
+                Service -> ATCRepo : findByIataCode(routePrefix)
+                activate ATCRepo
+                    ATCRepo --> Service : airTransportCompany
+                deactivate ATCRepo
+
+                Service -> ATC : hasCollaborator(userEmail)
+                activate ATC
+                    ATC --> Service : true / false
+                deactivate ATC
+
+                alt user is not a collaborator
+                    Service --> Controller : failure (user not authorised for this company)
+                    Controller -> Controller : tx.rollback()
+                else user is a collaborator
+
+                    Service -> RepoFac : flightRoutes(tx)
+                    activate RepoFac
+                        RepoFac --> Service : flightRouteRepository
+                    deactivate RepoFac
+
+                    Service -> RouteRepo : findByRouteName(routePrefix, routeNumber)
+                    activate RouteRepo
+                        RouteRepo --> Service : flightRoute
+                    deactivate RouteRepo
+
+                    Service -> FlightRoute : routeName().value()
+                    activate FlightRoute
+                        FlightRoute --> Service : routePrefix
+                    deactivate FlightRoute
+
+                    alt route prefix != company IATA code
+                        Service --> Controller : failure (route does not belong to user's company)
+                        Controller -> Controller : tx.rollback()
+                    else route belongs to company
+
+                        Service -> Service : validateDeactivationDate(deactivationDate)
+
+                        Service -> RepoFac : flights(tx)
+                        activate RepoFac
+                            RepoFac --> Service : flightRepository
+                        deactivate RepoFac
+
+                        Service -> FlightRepo : findByRoute(flightRoute)
+                        activate FlightRepo
+                            FlightRepo --> Service : flights
+                        deactivate FlightRepo
+
+                        loop for each Flight on the route
+                            Service -> Flight : hasPlanDepartingAfter(deactivationDate)
+                            activate Flight
+                                Flight -> Flight : flightPlans()
+                                loop for each FlightPlan on the Flight
+                                    Flight -> FP : departureDateTime(), isPending()
+                                    activate FP
+                                        FP --> Flight : departure, pending status
+                                    deactivate FP
+                                    note right of FP
+                                        Block deactivation when any pending plan
+                                        has departure strictly after deactivationDate
+                                    end note
+                                end
+                                Flight --> Service : conflict / no conflict
+                            deactivate Flight
+                        end
+
+                        alt any flight has a conflicting plan
+                            Service --> Controller : failure (planned departures exist after deactivation date)
+                            Controller -> Controller : tx.rollback()
+                        else no conflicts
+                            Service -> FlightRoute : deactivate(deactivationDate)
+                            activate FlightRoute
+                                note right of FlightRoute
+                                    Sets deactivationDate; route becomes inactive
+                                end note
+                                FlightRoute --> Service : ok
+                            deactivate FlightRoute
+
+                            Service -> RouteRepo : save(flightRoute)
+                            activate RouteRepo
+                                RouteRepo --> Service : success
+                            deactivate RouteRepo
+
+                            Service --> Controller : success
+                        end
+                    end
+                end
+
+            deactivate Service
+
+            Controller -> Controller : tx.commit()
+            Controller -> Controller : tx.close()
+            Controller --> UI : result
+        deactivate Controller
+
+        UI --> User : displays message
+
+    deactivate UI
+
+deactivate User
+
+@enduml

@@ -1,0 +1,118 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+package "aisafe" {
+
+    package "app" {
+        package "airtransportcompany.console" {
+
+            class AddPilotUI <<presentation>> {
+                - controller : AddPilotController
+                + doShow() : boolean
+            }
+        }
+    }
+
+    package "core" {
+
+        class AddPilotController <<controller>> {
+            - authz : AuthorizationService
+            - factory : RepositoryFactory
+            - service : AddPilotService
+            + addPilot(pilotId, email, certifications)
+        }
+
+        class AddPilotService <<service>> {
+            - factory : RepositoryFactory
+            + execute(pilotId, email, certifications, collaboratorEmail)
+        }
+
+        class PersistenceContext <<service>> {
+            {static} + repositories() : RepositoryFactory
+        }
+
+        interface RepositoryFactory <<factory>> {
+            + userManagementUsers()
+            + aircraftModels()
+            + pilots()
+            + getAirTransportCompanyRepository()
+        }
+
+        interface PilotCertificationRepository <<repository>>
+        interface AirTransportCompanyRepository <<repository>>
+        interface UserRepository <<repository>>
+        interface AircraftModelRepository <<repository>>
+
+        package "PilotCertification Aggregate" {
+
+            class PilotCertification <<entity>> <<aggregateRoot>> {
+                - pilotId : PilotID
+                - userEmail : Email
+                - company : AirTransportCompany
+                - active : boolean
+                - certifications : Set<ModelCertification>
+            }
+
+            class ModelCertification <<vo>> {
+                - aircraftModelId : AircraftModelId
+                - certificationDate : LocalDate
+            }
+
+            class PilotID <<vo>>
+        }
+
+        package "AirTransportCompany Aggregate" {
+            class AirTransportCompany <<entity>> <<aggregateRoot>>
+        }
+
+        package "User Aggregate" {
+            class User <<entity>> <<aggregateRoot>>
+            class Email <<vo>>
+            class AisafeRoles <<vo>>
+        }
+
+        package "AircraftModel Aggregate" {
+            class AircraftModel <<entity>> <<aggregateRoot>>
+            class AircraftModelId <<vo>>
+        }
+    }
+
+    ' ================= UI FLOW =================
+    AddPilotUI ..> AddPilotController
+
+    ' ================= CONTROLLER DEPENDENCIES =================
+    AddPilotController ..> PersistenceContext
+    AddPilotController ..> AuthorizationService
+    AddPilotController ..> AddPilotService
+
+    ' ================= SERVICE DEPENDENCIES =================
+    AddPilotService ..> RepositoryFactory
+
+    ' ================= REPOSITORIES =================
+    RepositoryFactory ..> UserRepository
+    RepositoryFactory ..> AircraftModelRepository
+    RepositoryFactory ..> PilotCertificationRepository
+    RepositoryFactory ..> AirTransportCompanyRepository
+
+    ' ================= DOMAIN DEPENDENCIES =================
+    PilotCertificationRepository ..> PilotCertification
+    AirTransportCompanyRepository ..> AirTransportCompany
+    UserRepository ..> User
+    AircraftModelRepository ..> AircraftModel
+
+    ' ================= DOMAIN RELATIONS =================
+    PilotCertification "1" *-- "1..*" ModelCertification
+    PilotCertification "1" *-- "1" PilotID
+    PilotCertification "1" --> "1" AirTransportCompany
+    PilotCertification --> Email
+
+    ModelCertification --> AircraftModelId
+    AircraftModel --> AircraftModelId
+
+    User --> Email
+    User --> AisafeRoles
+
+}
+@enduml

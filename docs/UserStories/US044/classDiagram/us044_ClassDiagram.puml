@@ -1,0 +1,130 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+title US044 - Weather Person Remote Access (Class Diagram)
+
+note as N1
+  Client logical roles: weather_client.c + protocol.c.
+  Server names match Java implementation.
+  Cross-package links = runtime communication (separate processes).
+end note
+
+package "RCOMP Client (C)" <<client>> {
+    class WeatherPersonClient <<weather_client.c>> {
+        +main()
+        +print_menu()
+        -do_login()
+        -do_register_weather()
+        -do_consult_weather()
+        -do_import_bulk()
+        -do_logout()
+    }
+
+    class ClientSession <<struct>> {
+        -socket: socket_t
+        -connected: int
+        -authenticated: int
+        -username: char[]
+        -host: char[]
+        -port: int
+    }
+
+    class ProtocolIO <<protocol.c/h>> {
+        +protocol_connect(host, port): socket_t
+        +protocol_send_message(sock, payload): int
+        +protocol_receive_message(sock, buffer): int
+        +protocol_close(sock)
+    }
+
+    class CommandBuilder <<inline in client>> {
+        +buildLogin(email, password): String
+        +buildRegisterWeather(...): String
+        +buildImportBulk(path, format): String
+        +buildConsult(areaCode, date): String
+        +buildLogout(): String
+    }
+
+    class ResponseParser <<inline in client>> {
+        +response_is_ok(response): bool
+        +print_response(response)
+    }
+}
+
+package "AISafe Server (Java)" <<server>> {
+    class RemoteAccessTcpServer {
+        +start()
+        -acceptLoop()
+    }
+
+    class RemoteConnectionHandler {
+        +run()
+        -dispatch(request, context): String
+    }
+
+    class RemoteMessageCodec {
+        +readMessage(input): String
+        +writeMessage(output, message)
+    }
+
+    class WeatherRemoteCommandHandler {
+        +handle(commandLine, context): String
+        +serviceId(): String
+        -handleLogin()
+        -handleLogout()
+        -handleRegisterWeather()
+        -handleConsultWeather()
+        -handleImportBulk()
+    }
+
+    class RemoteConnectionContext {
+        -clientIp: String
+        -clientPort: int
+        -authenticated: boolean
+        -username: String
+        +setAuthenticated(username)
+        +clearAuthentication()
+    }
+
+    class RemoteResponse <<utility>> {
+        +ok(status, payload): String
+        +error(code, message): String
+    }
+
+    class RemoteAccessUdpLogger {
+        +log(username, ip, port, serviceId, event)
+    }
+}
+
+package "aisafe.core (existing)" <<application>> {
+    class RegisterWeatherDataController
+    class ConsultWeatherDataController
+    class ImportBulkWeatherDataController
+}
+
+' --- Client internal ---
+WeatherPersonClient --> ClientSession
+WeatherPersonClient --> ProtocolIO
+WeatherPersonClient ..> CommandBuilder : builds commands
+WeatherPersonClient ..> ResponseParser : parses responses
+
+' --- Server internal ---
+RemoteAccessTcpServer --> RemoteConnectionHandler : submit per Socket
+RemoteConnectionHandler --> RemoteMessageCodec : read/write messages
+RemoteConnectionHandler --> WeatherRemoteCommandHandler : handle()
+RemoteConnectionHandler --> RemoteConnectionContext
+RemoteConnectionHandler --> RemoteAccessUdpLogger : DISCONNECT (if still auth)
+WeatherRemoteCommandHandler --> RemoteConnectionContext
+WeatherRemoteCommandHandler --> RemoteResponse
+WeatherRemoteCommandHandler --> RemoteAccessUdpLogger : LOGIN_*, LOGOUT
+WeatherRemoteCommandHandler --> RegisterWeatherDataController : REGISTER_WEATHER
+WeatherRemoteCommandHandler --> ImportBulkWeatherDataController : IMPORT_WEATHER_BULK
+WeatherRemoteCommandHandler --> ConsultWeatherDataController : CONSULT_WEATHER
+
+' --- Client <-> Server (distributed communication) ---
+ProtocolIO ..> RemoteAccessTcpServer : <<TCP>> connect (socket)
+ProtocolIO ..> RemoteMessageCodec : <<protocol>>\n[4-byte len][UTF-8 payload]
+CommandBuilder ..> WeatherRemoteCommandHandler : <<sends>>\nLOGIN, REGISTER_WEATHER,\nCONSULT_WEATHER, IMPORT_WEATHER_BULK, LOGOUT
+WeatherRemoteCommandHandler ..> ResponseParser : <<returns>>\nOK;... / ERR;...
+
+@enduml

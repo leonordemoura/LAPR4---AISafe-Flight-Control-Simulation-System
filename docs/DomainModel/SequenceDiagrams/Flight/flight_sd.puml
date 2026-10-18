@@ -1,0 +1,55 @@
+@startuml ""
+
+skinparam packageStyle rectangle
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "ATCC" as User
+participant "FlightUI" as UI <<presentation>>
+participant "FlightController" as Controller <<application>>
+database "FlightRepository" as Repo <<repository>>
+participant "Flight\n<<Aggregate Root>>" as Flight <<domain>>
+
+activate User
+    User -> UI : request to add new flight plan
+    activate UI
+        UI --> User : asks for flight and flightPlan details
+        User -> UI : provides flight and flightPlan details (flightId, flightPlan)
+        UI -> Controller : addFlightPlan(flightId, flightPlan)
+
+        activate Controller
+            Controller -> Repo : findById(flightId)
+
+            activate Repo
+                Repo --> Controller : flight (returns null if not found)
+            deactivate Repo
+
+            alt flightId exists
+                Controller -> Flight : addFlightPlan(flight, flightPlan)
+
+                note right of Flight: **Enforced Invariants:**\n- Flight plan must be valid\n- Flight and flightPlan routeID must match
+                activate Flight
+                    Flight --> Flight : addFlightPlan(flightPlan)
+                    Flight --> Controller : updated Flight instance
+                deactivate Flight
+
+                Controller -> Repo : update(flight)
+
+                activate Repo
+                    Repo --> Controller : confirmation of save
+                deactivate Repo
+
+                Controller --> UI : success message "Flight plan added successfully"
+
+            else flightId does not exist
+                Controller --> UI : error message "Flight with this ID already exists"
+            end
+        deactivate Controller
+
+        UI --> User : displays success or error message
+    deactivate UI
+deactivate User
+
+@enduml

@@ -1,0 +1,54 @@
+@startuml
+skinparam shadowing true
+
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as Actor
+participant "BackofficeUI" as UI <<presentation>>
+participant "AirControlAreaController" as CTRL <<application>>
+database "AirControlAreaRepository" as REPO <<repository>>
+participant "AirControlArea\n<<Aggregate Root>>" as DOMAIN <<domain>>
+
+Actor -> UI: start registration of new AirControlArea
+activate UI
+    UI --> Actor: request data
+    Actor --> UI: enter data (areaCode, geoBoundaries, minFuelAtArrival)
+
+    UI -> CTRL: createAirControlArea(areaCode, geoBoundaries, minFuelAtArrival)
+    activate CTRL
+
+        CTRL -> REPO: existsByAreaCode(areaCode)
+        activate REPO
+            REPO --> CTRL: true / false
+        deactivate REPO
+
+        alt AreaCode is unique
+            CTRL -> DOMAIN: new AirControlArea(areaCode, geoBoundary, minFuelAtArrival)
+            activate DOMAIN
+
+            note right of DOMAIN
+                <b>Enforced Invariant:</b>
+                • areaCode must be unique in the system
+                • Geographic boundaries must be valid
+                • minFuelAtArrival must be positive
+            end note
+
+            DOMAIN --> CTRL: AirControlArea
+            deactivate DOMAIN
+
+            CTRL -> REPO: save(airControlArea)
+            activate REPO
+                REPO --> CTRL: success
+            deactivate REPO
+
+            CTRL --> UI: success
+        else AreaCode already exists
+            CTRL --> UI: Error: AreaCode already exists
+        end
+
+    deactivate CTRL
+
+    UI --> Actor: show result
+deactivate UI
+@enduml

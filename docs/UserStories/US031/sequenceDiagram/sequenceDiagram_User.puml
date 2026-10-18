@@ -1,0 +1,102 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Admin / Backoffice Operator" as Actor
+participant ":RegisterUserUI" as UI <<presentation>>
+participant ":RegisterUserController" as Ctrl <<application>>
+database ":PersistenceContext" as PC <<persistence>>
+database ":RepositoryFactory" as RepoFac <<repository>>
+database ":UserRepository" as Repo <<persistence>>
+participant "user:SystemUser" as Domain <<domain>>
+participant "email:Email" as EmailVO <<domain>>
+
+Actor -> UI : registerUser(firstName, lastName, email, role, phoneCode, phoneNumber)
+activate UI
+
+   ' =========================
+   ' INPUT FLOW (DETAILED)
+   ' =========================
+   Actor -> UI : requests to register a new user
+   activate UI
+
+   UI --> Actor : asks for first name
+   Actor --> UI : provides firstName
+
+   UI --> Actor : asks for last name
+   Actor --> UI : provides lastName
+
+   UI --> Actor : asks for email
+   Actor --> UI : provides email
+
+   UI --> Actor : asks for role
+   Actor --> UI : provides role
+
+   UI --> Actor : asks for phone code
+   Actor --> UI : provides phoneCode
+
+   UI --> Actor : asks for phone number
+   Actor --> UI : provides phoneNumber
+   UI -> Ctrl : registerNewUser(firstName, lastName, email, role, phoneCode, phoneNumber)
+   activate Ctrl
+    activate Ctrl
+
+        ' REPOSITORY ACCESS
+        Ctrl -> PC : repositories()
+        activate PC
+            PC --> Ctrl : repositoryFactory
+        deactivate PC
+
+        Ctrl -> RepoFac : getUserRepository()
+        activate RepoFac
+            RepoFac --> Ctrl : userRepository
+        deactivate RepoFac
+
+        ' DOMAIN CREATION
+        Ctrl -> Domain : create(firstName, lastName, email, role, phoneCode, phoneNumber)
+        activate Domain
+
+            Domain -> EmailVO : create(email)
+            activate EmailVO
+                EmailVO -> EmailVO : validateFormat()
+                EmailVO -> EmailVO : validateDomain()
+                note right of EmailVO
+                  **Enforced Invariants:**
+                  - valid email format
+                  - domain is authorized
+                end note
+                EmailVO --> Domain : emailVO
+            deactivate EmailVO
+
+            Domain --> Ctrl : user
+        deactivate Domain
+
+        ' BUSINESS VALIDATION (APPLICATION LEVEL)
+        Ctrl -> Repo : existsByEmail(email)
+        activate Repo
+            Repo --> Ctrl : true/false
+        deactivate Repo
+
+        alt email does not exist
+            Ctrl -> Repo : save(user)
+            activate Repo
+                Repo --> Ctrl : success
+            deactivate Repo
+
+            note right of Repo
+              **Persistence Invariant:**
+              Email uniqueness enforced at DB level
+              (handles concurrent scenarios)
+            end note
+
+            Ctrl --> UI : success message
+
+        else email already exists
+            Ctrl --> UI : error "Email already in use"
+        end
+
+    deactivate Ctrl
+    UI --> Actor : display result
+deactivate UI
+@enduml

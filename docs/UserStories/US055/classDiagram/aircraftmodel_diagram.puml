@@ -1,0 +1,128 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing true
+
+package "aisafe" {
+
+    package "app" {
+        package "backoffice" {
+            package "console" {
+
+                class RegisterAircraftModelUI <<presentation>> {
+                    - controller : RegisterAircraftModelController
+                    + doShow() : boolean
+                }
+
+            }
+        }
+    }
+
+    package "core" {
+
+        class RegisterAircraftModelController <<controller>> {
+            - factory : RepositoryFactory
+            + registerNewAircraftModel(name, makerId, engineIds, physicalSpecs, aircraftType) : boolean
+        }
+
+        package "AircraftModel Aggregate" {
+
+            class AircraftModel <<entity>> <<aggregateRoot>> {
+                - aircraftModelId : AircraftModelId
+            }
+
+            class AircraftModelName <<vo>> {
+                - value : String
+            }
+
+            class AircraftModelId <<vo>> {
+                            - value : String
+                        }
+
+            class PhysicalSpecs <<vo>> {
+                - serviceCeiling : Altitude
+                - cruiseSpeed : Speed
+                - wingArea : Area
+                - emptyWeight : Weight
+                - mtow : Weight
+                - mzfw : Weight
+                - fuelCapacity : Weight
+            }
+
+            class Altitude <<vo>> {
+                - value : Double
+                - unit : String
+            }
+
+            class Speed <<vo>> {
+                - value : Double
+                - unit : String
+            }
+
+            class Area <<vo>> {
+                - value : Double
+                - unit : String
+            }
+
+            class Weight <<vo>> {
+                - value : Double
+                - unit : String
+            }
+
+            class MaximumSeats <<vo>> {
+                            - value : int
+                        }
+
+            enum AircraftType <<enum>> {
+                PASSENGER
+                CARGO
+                MIXED
+            }
+
+            class Maker <<entity>> {
+                - name
+                - country
+            }
+
+        }
+
+        package "EngineModel Aggregate" {
+            class EngineModel <<entity>> <<aggregateRoot>>
+        }
+
+        interface AircraftModelRepository <<repository>> {
+            +save(model)
+            +existsByNameAndMaker(name, makerId)
+        }
+
+        interface EngineModelRepository <<repository>>
+        interface MakerRepository <<repository>>
+
+    }
+
+    AircraftModel "1" *-- "1" AircraftModelName
+    AircraftModel "1" *-- "1" AircraftModelId
+    AircraftModel "1" *-- "1" MaximumSeats
+    AircraftModel "1" *-- "1" PhysicalSpecs
+    AircraftModel "1" --> "1" AircraftType
+    AircraftModel "1" --> "1" Maker
+
+AircraftModel "1" o-- "1..*" EngineModel : uses >
+
+    PhysicalSpecs "1" *-- "1" Altitude
+    PhysicalSpecs "1" *-- "1" Speed
+    PhysicalSpecs "1" *-- "1" Area
+    PhysicalSpecs "1" *-- "4" Weight
+
+    RegisterAircraftModelUI ..> RegisterAircraftModelController
+    RegisterAircraftModelController ..> AircraftModelRepository
+    RegisterAircraftModelController ..> EngineModelRepository
+    RegisterAircraftModelController ..> MakerRepository
+    RegisterAircraftModelController ..> AircraftModel
+
+    AircraftModelRepository ..> AircraftModel
+    EngineModelRepository ..> EngineModel
+    MakerRepository ..> Maker
+
+}
+
+@enduml

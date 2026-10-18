@@ -1,0 +1,71 @@
+flight TP123 {
+    type REGULAR
+
+    leg {
+        departure OPO 2026-05-14 08:00
+        arrival MAD 2026-05-14 09:00
+
+        route {
+            origin OPO
+            destination MAD
+        }
+
+        segment {
+            start (41.242, -8.678)
+            end (38.774, -9.134)
+            altitude 12000 m
+            width 10 km
+            wind 180 deg 15 kt
+        }
+
+        fuel 5000 kg
+    }
+
+    leg {
+        departure MAD 2026-05-14 10:00
+        arrival BCN 2026-05-14 11:00
+
+        route {
+            origin MAD
+            destination BCN
+        }
+
+        segment {
+            start (38.774, -9.134)
+            end (39.5, -6.5)
+            altitude 10000 m
+            width 8 km
+            wind 250 deg 12 kt
+        }
+
+        segment {
+            start (39.5, -6.5)
+            end (40.483, -3.567)
+            altitude 11000 m
+            width 10 km
+            wind 270 deg 10 kt
+        }
+
+        fuel 3000 kg
+    }
+
+    leg {
+        departure BCN 2026-05-14 13:00
+        arrival LIS 2026-05-14 15:00
+
+        route {
+            origin BCN
+            destination LIS
+        }
+
+        segment {
+            start (40.483, -3.567)
+            end (41.297, 2.078)
+            altitude 12000 m
+            width 15 km
+            wind 300 deg 25 kt
+        }
+
+        fuel 2000 kg
+    }
+}

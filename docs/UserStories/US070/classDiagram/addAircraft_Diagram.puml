@@ -1,0 +1,132 @@
+@startuml
+
+package "aisafe.core" {
+
+    class AddAircraftController <<application>> {
+        - factory: RepositoryFactory
+        - aircraftRepo: AircraftRepository
+        - modelRepo: AircraftModelRepository
+        - companyRepo: AirTransportCompanyRepository
+        - engineModelRepo: EngineModelRepository
+        + availableModels(): Iterable<AircraftModel>
+        + availableCompanies(): Iterable<AirTransportCompany>
+        + availableEngineModels(): Iterable<EngineModel>
+        + registrationExists(registration: String): boolean
+        + addAircraft(registration, modelId, engineIds, seats, year, country, status, iataCode: String): Aircraft
+    }
+
+    class Aircraft <<entity>> <<root>> {
+        - registration: AircraftRegistration
+        - status: AircraftStatus
+        - engines: List<CurrentEngine>
+        + decommission(): void
+        + registration(): AircraftRegistration
+        + status(): AircraftStatus
+    }
+
+    class AircraftModel <<entity>> <<root>> {
+        - id: AircraftModelId
+        - name: AircraftModelName
+        + name(): AircraftModelName
+        + maker(): Maker
+        + maximumSeats(): MaximumSeats
+    }
+
+    class AirTransportCompany <<entity>> <<root>> {
+        - iataCode: IataCode
+        - companyName: CompanyName
+    }
+
+    class EngineModel <<entity>> <<root>> {
+        - modelName: EngineModelName
+        - engineType: MotorizationType
+        + modelName(): EngineModelName
+        + engineType(): MotorizationType
+    }
+
+    class AircraftRegistration <<vo>> {
+        - value: String
+    }
+
+    class CabinConfiguration <<vo>> {
+        - economySeats: int
+        - businessSeats: int
+        - firstClassSeats: int
+        + totalSeats(): int
+        + economySeats(): int
+        + businessSeats(): int
+        + firstClassSeats(): int
+    }
+
+    class CurrentEngine <<vo>> {
+        - engineModelId: String
+        + valueOf(engineModelId: String): CurrentEngine
+        + value(): String
+    }
+
+    class RegistrationYear <<vo>> {
+        - year: int
+        + value(): int
+        + age(): int
+    }
+
+    class Country <<vo>> {
+        - name: String
+        - numericCode: Integer
+    }
+
+    enum AircraftStatus <<enum>> {
+        ACTIVE
+        DECOMMISSIONED
+    }
+
+    interface AircraftRepository <<interface>> {
+        + existsByRegistration(registration: String): boolean
+        + save(aircraft: Aircraft): Aircraft
+    }
+
+    interface AircraftModelRepository <<interface>> {
+        + ofIdentity(id: AircraftModelId): Optional<AircraftModel>
+        + findAll(): Iterable<AircraftModel>
+    }
+
+    interface AirTransportCompanyRepository <<interface>> {
+        + findByIataCode(iataCode: IataCode): Optional<AirTransportCompany>
+        + findAll(): Iterable<AirTransportCompany>
+    }
+
+    interface EngineModelRepository <<interface>> {
+        + findAll(): Iterable<EngineModel>
+    }
+
+    Aircraft "1" *-- "1" AircraftRegistration
+    Aircraft "1" *-- "1" CabinConfiguration
+    Aircraft "1" *-- "1" RegistrationYear
+    Aircraft "1" *-- "1" Country
+    Aircraft "1" *-- "1..*" CurrentEngine
+    Aircraft --> AircraftStatus
+    Aircraft "0..*" --> "1" AircraftModel
+    Aircraft "0..*" --> "1" AirTransportCompany
+
+    AddAircraftController ..> AircraftRepository
+    AddAircraftController ..> AircraftModelRepository
+    AddAircraftController ..> AirTransportCompanyRepository
+    AddAircraftController ..> EngineModelRepository
+
+    AircraftRepository ..> Aircraft
+    AircraftModelRepository ..> AircraftModel
+    AirTransportCompanyRepository ..> AirTransportCompany
+    EngineModelRepository ..> EngineModel
+}
+
+package "aisafe.app.backoffice.console" {
+
+    class AddAircraftUI <<presentation>> {
+        - controller: AddAircraftController
+        + doShow(): boolean
+    }
+
+    AddAircraftUI ..> AddAircraftController
+}
+
+@enduml

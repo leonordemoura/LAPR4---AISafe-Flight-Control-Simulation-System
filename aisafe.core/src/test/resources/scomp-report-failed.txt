@@ -1,0 +1,31 @@
+========= SIMULATION REPORT =========
+Total Flights: 2
+Total Violations: 100
+Violation Threshold: 100
+
+-----------------------------------
+
+FLIGHT HISTORIES:
+
+Flight 1:
+ Time: 09:00 Position: (0.00, 0.00), Altitude: 1000.00
+
+Flight 2:
+ Time: 09:00 Position: (1.00, 1.00), Altitude: 1000.00
+
+-----------------------------------
+
+FLIGHT STATUS:
+
+Flight 1:
+  Total Violations: 50
+  Unable to calculate performance.
+
+Flight 2:
+  Total Violations: 50
+  Unable to calculate performance.
+
+Simulation was aborted due to reaching the violation threshold.
+SIMULATION FAILED :(
+
+========= END OF REPORT =========

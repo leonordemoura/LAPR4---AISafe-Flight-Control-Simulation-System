@@ -1,0 +1,221 @@
+@startuml
+
+package "Report Aggregate" {
+
+    class Report <<entity>> <<aggregateRoot>> {
+    }
+
+    class ReportTitle <<vo>> {
+        value
+    }
+
+    class ReportPeriod <<vo>> {
+        period
+    }
+
+    class ReportHeader <<vo>> {
+        generatedAt
+        generatedBy
+    }
+
+    class ReportSection <<vo>> {
+        title
+        content
+    }
+
+    enum ReportType <<enum>> {
+        MONTHLY_STATISTICS
+        INCIDENT_ANALYSIS
+        COMPLIANCE_REPORT
+    }
+
+    Report "1" *-- "1" ReportTitle
+    Report "1" *-- "1" ReportPeriod
+    Report "1" *-- "1" ReportHeader
+    Report "1" *-- "1..*" ReportSection : composed of >
+    Report "1" --> "1" ReportType : typed as >
+}
+
+package "AirControlArea Aggregate" {
+
+    class AirControlArea <<entity>> <<root>> {
+        }
+        class AreaCode <<vo>> {
+            value
+        }
+
+        class AreaName <<vo>> {
+            value
+        }
+
+        class MinFuelAtArrival <<vo>> {
+            value
+        }
+
+        class GeoBoundary <<vo>> {
+        }
+
+        class Coordinate <<vo>> {
+            latitude
+            longitude
+        }
+
+        class Membership <<vo>> {
+            userEmail
+            isValid
+        }
+
+        enum MemberType <<enum>> {
+                ATCC
+                PILOT
+                FCO
+        }
+
+        class Position <<vo>> {
+            position
+        }
+
+
+        AirControlArea "1" *-- "1" AreaName
+        Membership "1" *-- "1" MemberType : typed as >
+        AirControlArea "1" -- "0.." Membership : has >
+        AirControlArea "1" *-- "1" AreaCode
+        AirControlArea "1" *-- "1" MinFuelAtArrival
+        AirControlArea "1" *-- "1" GeoBoundary : bounded by >
+        GeoBoundary "1" *-- "4" Coordinate : defined by >
+        Membership "1" --> "1" Position : has >
+}
+
+package "SimulationReport Aggregate" {
+
+    class SimulationReport <<entity>> <<root>> {
+        relatedFlightDesignator
+    }
+
+    class ReportDate <<vo>> {
+        generatedAt
+    }
+
+    class TotalFlights <<vo>> {
+        value
+    }
+
+    class TotalViolations <<vo>> {
+        value
+    }
+
+    class ViolationThreshold <<vo>> {
+        value
+    }
+
+    class FlightExecutionStatus <<vo>> {
+        flightId
+        violationCount
+        performance
+    }
+
+    class SafetyViolation <<vo>> {
+        horizontalDistance
+        verticalDistance
+    }
+
+    class FlightViolationState <<vo>> {
+        flightId
+        timestamp
+        altitude
+    }
+
+    class Position <<vo>> {
+        x
+        y
+    }
+
+    class VelocityVector <<vo>> {
+        vx
+        vy
+        vz
+    }
+
+    enum ValidationStatus <<enum>> {
+        SUCCEEDED
+        FAILED
+        ABORTED
+    }
+
+    ' Relationships
+    SimulationReport "1" *-- "1" ReportDate
+    SimulationReport "1" *-- "1" TotalFlights
+    SimulationReport "1" *-- "1" TotalViolations
+    SimulationReport "1" *-- "1" ViolationThreshold
+
+    SimulationReport "1" *-- "0..*" FlightExecutionStatus
+    SimulationReport "1" *-- "0..*" SafetyViolation
+
+    SafetyViolation "1" *-- "2" FlightViolationState
+
+    FlightViolationState "1" *-- "1" Position
+    FlightViolationState "1" *-- "1" VelocityVector
+
+    SimulationReport "1" --> "1" ValidationStatus
+}
+
+package "Flight Aggregate" {
+    class Flight <<entity>> <<aggregateRoot>> {
+    }
+
+    class FlightDesignator <<vo>> {
+        airlineCode
+        flightNumber
+        operationalSuffix
+    }
+
+    class FlightPlan <<entity>> {
+        submittedAt
+        rejectionReason
+    }
+
+    class FuelQuantity <<vo>> {
+        value
+        unit
+    }
+
+    class DepartureDatetime <<vo>> {
+        dateTime
+    }
+
+    class AircraftRegistration <<vo>> {
+        value
+    }
+
+    class PilotID <<vo>> {
+        value
+    }
+
+    enum FlightType <<enum>> {
+        REGULAR
+        CHARTER
+    }
+
+    enum FlightPlanStatus <<enum>> {
+        DRAFT
+        VALIDATED
+        ACTIVE
+        CANCELLED
+    }
+
+    Flight "1" *-- "1" FlightDesignator : identified by >
+    Flight "1" --> "1" FlightType : typed as >
+    FlightPlan "1" --> "1" AircraftRegistration : uses >
+    FlightPlan "1" --> "1" PilotID : assigned to >
+    FlightPlan "1" *-- "1" DepartureDatetime
+    FlightPlan "1" --> "1" FlightPlanStatus : current status >
+    Flight "1" *-- "0..*" FlightPlan : has plans >
+
+    FlightPlan "1" *-- "1" FuelQuantity
+}
+
+Report "1..*" --> "1" AirControlArea : scoped to >
+Report "1..*" --> "1..*" SimulationReport : based on >
+Report "1..*" --> "1..*" Flight : aggregates >
+
+@enduml

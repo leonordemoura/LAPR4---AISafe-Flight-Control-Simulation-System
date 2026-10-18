@@ -1,0 +1,338 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Pilot" as PILOT
+
+participant "RegisterFlightPlanUI" as UI <<presentation>>
+participant "RegisterFlightPlanController" as CTRL <<application>>
+participant "RegisterFlightPlanService" as SVC <<service>>
+participant "FlightPlanDslGenerator" as GEN <<application>>
+participant "PilotScheduleConflictService" as OVERLAP <<application>>
+
+database "PersistenceContext" as PC <<persistence>>
+database "AppSettings" as AS <<persistence>>
+database "RepositoryFactory" as RepoFac <<repository>>
+database "FlightRepository" as FLIGHT_REPO <<repository>>
+database "AircraftRepository" as AIRCRAFT_REPO <<repository>>
+database "PilotCertificationRepository" as PILOT_REPO <<repository>>
+
+participant "Flight\n<<Aggregate Root>>" as FLIGHT <<domain>>
+participant "FlightPlan\n<<entity>>" as FP <<domain>>
+
+activate PILOT
+
+PILOT -> UI : open register flight plan
+activate UI
+
+UI -> CTRL : new RegisterFlightPlanController()
+activate CTRL
+
+CTRL -> PC : repositories()
+activate PC
+PC -> AS : instance()
+activate AS
+PC -> AS : getRepositoryFactory()
+AS -> RepoFac : create()
+activate RepoFac
+RepoFac --> AS : repositoryFactory
+deactivate RepoFac
+AS --> PC : repositoryFactory
+deactivate AS
+PC --> CTRL : repositoryFactory
+deactivate PC
+
+CTRL -> SVC : new RegisterFlightPlanService(repositoryFactory)
+activate SVC
+note right of SVC
+  Controller also creates AuthorizationGuardService
+  and keeps validatedFlight between UI steps
+end note
+SVC --> CTRL : service
+deactivate SVC
+
+CTRL --> UI : controller ready
+deactivate CTRL
+
+UI -> PILOT : ask for flight designator
+PILOT -> UI : airline code, number, suffix
+
+UI -> CTRL : validateFlight(airlineCode, number, suffix)
+activate CTRL
+note right of CTRL : ensureAuthenticatedPilot()
+
+CTRL -> RepoFac : newTransactionalContext()
+activate RepoFac
+RepoFac --> CTRL : tx
+deactivate RepoFac
+CTRL -> CTRL : tx.beginTransaction()
+
+CTRL -> SVC : validateFlight(airlineCode, number, suffix, tx)
+activate SVC
+
+SVC -> RepoFac : flights(tx)
+activate RepoFac
+RepoFac -> FLIGHT_REPO : create()
+activate FLIGHT_REPO
+FLIGHT_REPO --> RepoFac : flightRepository
+deactivate FLIGHT_REPO
+RepoFac --> SVC : flightRepository
+deactivate RepoFac
+
+SVC -> FLIGHT_REPO : findByDesignator(designator)
+activate FLIGHT_REPO
+
+alt flight not found
+    FLIGHT_REPO --> SVC : empty
+    deactivate FLIGHT_REPO
+    SVC --> CTRL : error - flight not found
+    CTRL -> CTRL : tx.rollback()
+else flight found
+    FLIGHT_REPO --> SVC : flight
+    deactivate FLIGHT_REPO
+    SVC -> SVC : ensureRouteActiveAt(route, now)
+    SVC -> SVC : ensureFlightAircraftOperational(flight, tx)
+    note right of SVC
+      Loads aircraft by flight.aircraftRegistration();
+      checks isActive() and company IATA == route IATA
+    end note
+    SVC -> RepoFac : aircrafts(tx)
+    activate RepoFac
+    RepoFac -> AIRCRAFT_REPO : create()
+    activate AIRCRAFT_REPO
+    AIRCRAFT_REPO --> RepoFac : aircraftRepository
+    deactivate AIRCRAFT_REPO
+    RepoFac --> SVC : aircraftRepository
+    deactivate RepoFac
+    SVC -> AIRCRAFT_REPO : findByRegistration(flight.aircraftRegistration)
+    activate AIRCRAFT_REPO
+    AIRCRAFT_REPO --> SVC : aircraft
+    deactivate AIRCRAFT_REPO
+    SVC --> CTRL : flight (stored as validatedFlight)
+    CTRL -> CTRL : tx.commit()
+end
+
+CTRL -> CTRL : tx.close()
+deactivate SVC
+CTRL --> UI : flight valid / error
+deactivate CTRL
+
+UI -> CTRL : validatedFlightAircraftRegistration()
+activate CTRL
+CTRL --> UI : aircraft registration (read-only, from flight)
+deactivate CTRL
+UI --> PILOT : show aircraft from flight
+
+UI -> PILOT : ask for pilot ID (PilotCertification)
+PILOT -> UI : pilotId
+
+UI -> CTRL : validatePilot(pilotId)
+activate CTRL
+note right of CTRL : requires validatedFlight from step 1
+
+CTRL -> RepoFac : newTransactionalContext()
+activate RepoFac
+RepoFac --> CTRL : tx
+deactivate RepoFac
+CTRL -> CTRL : tx.beginTransaction()
+
+CTRL -> SVC : validatePilot(validatedFlight, pilotId, tx)
+activate SVC
+
+SVC -> RepoFac : pilots(tx)
+activate RepoFac
+RepoFac -> PILOT_REPO : create()
+activate PILOT_REPO
+PILOT_REPO --> RepoFac : pilotCertificationRepository
+deactivate PILOT_REPO
+RepoFac --> SVC : pilotCertificationRepository
+deactivate RepoFac
+
+SVC -> SVC : new PilotID(pilotId)
+SVC -> PILOT_REPO : findByPilotId(PilotID)
+activate PILOT_REPO
+
+alt certification not found
+    PILOT_REPO --> SVC : empty
+    deactivate PILOT_REPO
+    SVC --> CTRL : error
+    CTRL -> CTRL : tx.rollback()
+else certification found
+    PILOT_REPO --> SVC : pilotCertification
+    deactivate PILOT_REPO
+    SVC -> SVC : pilot.isActive()
+    SVC -> SVC : pilot.company.iataCode == route.routeName IATA
+    alt inactive or wrong company
+        SVC --> CTRL : error
+        CTRL -> CTRL : tx.rollback()
+    else valid
+        note right of CTRL
+          Service returns PilotCertification but
+          controller.validatePilot() is void — pilotId
+          stays in UI/DTO only; not stored on controller.
+          registerFlightPlan re-validates via dto.pilotId.
+        end note
+        SVC --> CTRL : void (pilot validated)
+        CTRL -> CTRL : tx.commit()
+    end
+end
+
+CTRL -> CTRL : tx.close()
+deactivate SVC
+CTRL --> UI : pilot valid / error
+deactivate CTRL
+
+UI -> PILOT : departure, arrival, fuel, DSL option (1/2)
+
+alt option 1 — manual legs/segments
+    UI -> PILOT : collect legs and segments (incl. width km, wind deg/speed/unit)
+    PILOT -> UI : leg/segment data
+    UI -> UI : dto.legs + dto.flightTypeForDsl
+    note right of UI
+        UI does NOT call FlightPlanDslGenerator.
+        Service generates DSL with width/wind per US083.
+    end note
+else option 2 — load from file
+    PILOT -> UI : path to .flight file
+    UI -> UI : read file into dto.dslContent
+end
+
+UI -> CTRL : registerFlightPlan(dto)
+activate CTRL
+note right of CTRL : ensureAuthenticatedPilot()
+
+CTRL -> RepoFac : newTransactionalContext()
+activate RepoFac
+RepoFac --> CTRL : tx
+deactivate RepoFac
+CTRL -> CTRL : tx.beginTransaction()
+
+CTRL -> SVC : registerFlightPlan(dto, tx)
+activate SVC
+
+SVC -> SVC : validateFlight(dto designator, tx)
+note right of SVC
+  Re-validates flight, route active at now,
+  and aircraft from flight (not from DTO)
+end note
+SVC -> RepoFac : flights(tx)
+activate RepoFac
+RepoFac -> FLIGHT_REPO : create()
+activate FLIGHT_REPO
+FLIGHT_REPO --> RepoFac : flightRepository
+deactivate FLIGHT_REPO
+RepoFac --> SVC : flightRepository
+deactivate RepoFac
+SVC -> FLIGHT_REPO : findByDesignator(designator)
+activate FLIGHT_REPO
+FLIGHT_REPO --> SVC : flight
+deactivate FLIGHT_REPO
+
+SVC -> SVC : pilot = validatePilot(flight, dto.pilotId, tx)
+note right of SVC
+  Service method returns PilotCertification;
+  register uses pilot.identity() for the plan
+end note
+SVC -> RepoFac : pilots(tx)
+activate RepoFac
+RepoFac -> PILOT_REPO : create()
+activate PILOT_REPO
+PILOT_REPO --> RepoFac : pilotCertificationRepository
+deactivate PILOT_REPO
+RepoFac --> SVC : pilotCertificationRepository
+deactivate RepoFac
+SVC -> PILOT_REPO : findByPilotId(PilotID)
+activate PILOT_REPO
+PILOT_REPO --> SVC : pilotCertification
+deactivate PILOT_REPO
+
+alt dto has legs and blank dslContent
+    SVC -> GEN : generate(dto.flightDesignatorText(),\n  dto.flightTypeForDsl, dto.legs)
+    activate GEN
+    GEN --> SVC : DSL string
+    deactivate GEN
+else dto has dslContent
+    SVC -> SVC : use dto.dslContent as-is
+    SVC -> SVC : ensureDslFlightMatchesSelectedFlight
+    SVC -> SVC : FlightPlanDslContentGuard.ensureMinimumStructure
+end
+
+SVC -> SVC : FlightPlanScheduleResolver.fromRegisterDto(dto, dsl)
+SVC -> SVC : ensureRouteActiveAt(route, schedule.departure)
+
+SVC -> FLIGHT : pendingReplaceablePlanId()
+activate FLIGHT
+FLIGHT --> SVC : optional draft plan id to exclude
+deactivate FLIGHT
+
+SVC -> OVERLAP : ensureNoOverlap(pilotId, schedule,\n  excludeDraftPlanId, excludeFlightId, tx)
+activate OVERLAP
+note right of OVERLAP
+  excludeDraftPlanId: current DRAFT on this flight
+  (so replacing a draft does not self-conflict)
+end note
+OVERLAP -> FLIGHT_REPO : hasOverlappingScheduleForPilot(...)
+activate FLIGHT_REPO
+FLIGHT_REPO --> OVERLAP : boolean
+deactivate FLIGHT_REPO
+OVERLAP --> SVC : ok / error
+deactivate OVERLAP
+
+SVC -> FLIGHT : registerOrReplaceFlightPlan(\n  flight.aircraftRegistration, pilot.identity(),\n  departure, arrival, fuel, new DslSource(dsl))
+activate FLIGHT
+note right of FLIGHT
+  Blocks if current plan VALIDATED/ACTIVE;
+  cancels current DRAFT (CANCELLED) then addFlightPlan
+end note
+FLIGHT -> FP : cancel() on previous DRAFT (if any)
+FLIGHT -> FP : new FlightPlan(..., DRAFT)
+activate FP
+note right of FP
+    Invariants: fuel > 0, departure not past,
+    arrival after departure, dslSource not blank,
+    status = DRAFT
+end note
+FP --> FLIGHT : flightPlan
+deactivate FP
+
+SVC -> SVC : applyRegistrationMetadata(plan, flight, dto)
+note right of SVC
+  Mutates plan summary fields on the aggregate;
+  flight reference already held by service
+end note
+deactivate FLIGHT
+
+SVC -> RepoFac : flights(tx)
+activate RepoFac
+RepoFac -> FLIGHT_REPO : create()
+activate FLIGHT_REPO
+FLIGHT_REPO --> RepoFac : flightRepository
+deactivate FLIGHT_REPO
+RepoFac --> SVC : flightRepository
+deactivate RepoFac
+SVC -> FLIGHT_REPO : save(flight)
+activate FLIGHT_REPO
+FLIGHT_REPO --> SVC : persisted flight
+deactivate FLIGHT_REPO
+
+SVC --> CTRL : flight
+CTRL -> CTRL : tx.commit()
+
+CTRL -> CTRL : tx.close()
+deactivate SVC
+CTRL --> UI : success / error
+deactivate CTRL
+
+UI --> PILOT : plan created in DRAFT
+deactivate UI
+deactivate PILOT
+
+note over UI, FLIGHT_REPO
+  US085: full DSL validation (separate menu) DRAFT → VALIDATED
+  US081: separate file-import use case
+  US082: weather enrichment on stored DSL
+end note
+
+@enduml

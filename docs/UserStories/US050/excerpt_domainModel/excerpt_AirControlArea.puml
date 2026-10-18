@@ -1,0 +1,55 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+hide methods
+
+package "AirControlArea Aggregate" {
+
+    class AirControlArea <<entity>> <<root>> {
+    }
+    class AreaCode <<vo>> {
+        value
+    }
+
+    class AreaName <<vo>> {
+        value
+    }
+
+    class MinFuelAtArrival <<vo>> {
+        value
+    }
+
+    class GeoBoundary <<vo>> {
+    }
+
+    class Coordinate <<vo>> {
+        latitude
+        longitude
+    }
+
+    class AreaMembership <<entity>> {
+        isValid
+    }
+
+    class MaxAltitude <<vo>> {
+        value
+    }
+
+    enum AreaMemberType <<enum>> {
+        FCO
+    }
+
+
+    ' Relacionamentos AirControlArea
+    AirControlArea "1" *-- "1" MaxAltitude
+    AirControlArea "1" *-- "1" AreaName
+    AreaMembership "1" *-- "1" AreaMemberType : typed as >
+    AirControlArea "1" *-- "0..*" AreaMembership : has >
+    AirControlArea "1" *-- "1" AreaCode
+    AirControlArea "1" *-- "1" MinFuelAtArrival
+    AirControlArea "1" *-- "1" GeoBoundary : bounded by >
+    GeoBoundary "1" *-- "4" Coordinate : defined by >
+}
+
+@enduml

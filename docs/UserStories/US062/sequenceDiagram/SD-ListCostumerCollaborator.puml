@@ -1,0 +1,174 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Backoffice Operator" as BO
+participant "ListCostumerCollaboratorsUI" as UI <<presentation>>
+participant "ListCollaboratorsController" as CTRL <<application>>
+database "PersistenceContext" as Persistence <<persistence>>
+database "AppSettings" as AppSettings <<persistence>>
+database "RepositoryFactory" as Factory <<factory>>
+database "AirTransportCompanyRepository" as ATCR <<repository>>
+database "AirControlAreaRepository" as ACAR <<repository>>
+database "UserRepository" as USERR <<repository>>
+
+activate BO
+
+BO -> UI : requests to list\ncollaborators
+activate UI
+
+UI -> BO : presents customer type options\n[Air Transport Company, Air Control Area]
+BO -> UI : selects customer type
+
+alt selected Air Transport Company
+
+    UI -> CTRL : getAirTransportCompanies()
+    activate CTRL
+
+    CTRL -> Persistence : repositories()
+    activate Persistence
+    Persistence -> AppSettings : instance()
+    activate AppSettings
+    Persistence -> AppSettings : getRepositoryFactory()
+    AppSettings -> Factory : create()
+    activate Factory
+    Factory --> AppSettings : repositoryFactory
+    deactivate Factory
+    AppSettings --> Persistence : repositoryFactory
+    deactivate AppSettings
+    Persistence --> CTRL : repositoryFactory
+    deactivate Persistence
+
+    CTRL -> Factory : getAirTransportCompanyRepository()
+    activate Factory
+    Factory --> CTRL : AirTransportCompanyRepository
+    deactivate Factory
+
+    CTRL -> ATCR : findAll()
+    activate ATCR
+    ATCR --> CTRL : companies
+    deactivate ATCR
+    CTRL --> UI : companies
+    deactivate CTRL
+
+    alt no companies exist
+        UI --> BO : displays message\n"No companies registered"
+    else companies exist
+        UI -> BO : presents list of companies
+        BO -> UI : selects a company
+
+        UI -> CTRL : listActiveCollaboratorsByCompany(iataCode)
+        activate CTRL
+
+        CTRL -> Factory : getAirTransportCompanyRepository()
+        activate Factory
+        Factory --> CTRL : AirTransportCompanyRepository
+        deactivate Factory
+
+        CTRL -> ATCR : findByIataCode(iataCode)
+        activate ATCR
+        ATCR --> CTRL : company
+        deactivate ATCR
+
+        CTRL -> Factory : getUserRepository()
+        activate Factory
+        Factory --> CTRL : UserRepository
+        deactivate Factory
+
+        loop for each Membership where isValid = true
+            CTRL -> USERR : findByEmail(userEmail)
+            activate USERR
+            USERR --> CTRL : user
+            deactivate USERR
+        end
+
+        CTRL --> UI : activeCollaborators
+        deactivate CTRL
+
+        alt no active collaborators
+            UI --> BO : displays message\n"No active collaborators"
+        else active collaborators exist
+            UI --> BO : displays list with name,\nemail and position
+        end
+    end
+
+else selected Air Control Area
+
+    UI -> CTRL : getAirControlAreas()
+    activate CTRL
+
+    CTRL -> Persistence : repositories()
+    activate Persistence
+    Persistence -> AppSettings : instance()
+    activate AppSettings
+    Persistence -> AppSettings : getRepositoryFactory()
+    AppSettings -> Factory : create()
+    activate Factory
+    Factory --> AppSettings : repositoryFactory
+    deactivate Factory
+    AppSettings --> Persistence : repositoryFactory
+    deactivate AppSettings
+    Persistence --> CTRL : repositoryFactory
+    deactivate Persistence
+
+    CTRL -> Factory : getAirControlAreaRepository()
+    activate Factory
+    Factory --> CTRL : AirControlAreaRepository
+    deactivate Factory
+
+    CTRL -> ACAR : findAll()
+    activate ACAR
+    ACAR --> CTRL : areas
+    deactivate ACAR
+    CTRL --> UI : areas
+    deactivate CTRL
+
+    alt no areas exist
+        UI --> BO : displays message\n"No areas registered"
+    else areas exist
+        UI -> BO : presents list of areas
+        BO -> UI : selects an area
+
+        UI -> CTRL : listActiveCollaboratorsByArea(areaCode)
+        activate CTRL
+
+        CTRL -> Factory : getAirControlAreaRepository()
+        activate Factory
+        Factory --> CTRL : AirControlAreaRepository
+        deactivate Factory
+
+        CTRL -> ACAR : findByAreaCode(areaCode)
+        activate ACAR
+        ACAR --> CTRL : area
+        deactivate ACAR
+
+        CTRL -> Factory : getUserRepository()
+        activate Factory
+        Factory --> CTRL : UserRepository
+        deactivate Factory
+
+        loop for each Membership where isValid = true
+            CTRL -> USERR : findByEmail(userEmail)
+            activate USERR
+            USERR --> CTRL : user
+            deactivate USERR
+        end
+
+        CTRL --> UI : activeCollaborators
+        deactivate CTRL
+
+        alt no active collaborators
+            UI --> BO : displays message\n"No active collaborators"
+        else active collaborators exist
+            UI --> BO : displays list with name,\nemail and position
+        end
+    end
+end
+
+deactivate UI
+
+deactivate BO
+
+@enduml

@@ -1,0 +1,128 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing true
+skinparam classAttributeIconSize 0
+
+package "backoffice" {
+    package "app" {
+        package "console" {
+            class ListCostumerCollaboratorsUI <<presentation>> {
+                - controller: ListCostumerCollaboratorsController
+                + doShow(): boolean
+            }
+        }
+    }
+}
+
+package "core" {
+
+    class ListCostumerCollaboratorsController <<controller>> {
+        - factory: RepositoryFactory
+        + getAirTransportCompanies(): Iterable<AirTransportCompany>
+        + getAirControlAreas(): Iterable<AirControlArea>
+        + listActiveCollaboratorsByCompany(iataCode: IataCode): Iterable<SystemUser>
+        + listActiveCollaboratorsByArea(areaCode: AreaCode): Iterable<SystemUser>
+    }
+
+    interface Customer <<interface>>
+
+    class AirTransportCompany <<entity>> <<aggregateRoot>>
+
+    class Membership <<vo>> {
+        - isActive: boolean
+    }
+
+    class Position <<vo>> {
+        - position: String
+    }
+
+    enum MemberType <<enum>> {
+        ATCC
+        PILOT
+        FCO
+    }
+
+    class SystemUser <<entity>> <<aggregateRoot>>
+
+    class FullName <<vo>> {
+        - firstName: String
+        - lastName: String
+    }
+
+    class Email <<vo>> {
+        - emailAddress: String
+    }
+
+    class Email_Domain <<vo>> {
+        - domain: String
+    }
+
+    class PhoneNumber <<vo>> {
+        - code: Integer
+        - number: Integer
+    }
+
+    class AirControlArea <<entity>> <<aggregateRoot>>
+
+    class AreaCode <<vo>> {
+        - value: String
+    }
+
+    class IataCode <<vo>> {
+        - value: String
+    }
+
+    interface AirTransportCompanyRepository <<repository>> {
+        + findAll(): Iterable<AirTransportCompany>
+        + findByIataCode(iataCode: IataCode): Optional<AirTransportCompany>
+    }
+
+    interface UserRepository <<repository>> {
+        + findByEmail(email: Email): Optional<SystemUser>
+    }
+
+    interface AirControlAreaRepository <<repository>> {
+        + findAll(): Iterable<AirControlArea>
+        + findByAreaCode(areaCode: AreaCode): Optional<AirControlArea>
+    }
+
+    interface RepositoryFactory <<interface>> {
+        + getAirTransportCompanyRepository(): AirTransportCompanyRepository
+        + getAirControlAreaRepository(): AirControlAreaRepository
+        + getUserRepository(): UserRepository
+    }
+
+    ' ── Customer hierarchy ─────────────────────────────────────────────
+    AirTransportCompany ..|> Customer : implements >
+    AirControlArea ..|> Customer : implements >
+
+    ' ── Domain relationships ───────────────────────────────────────────
+    AirTransportCompany "1" *-- "1" IataCode
+    AirTransportCompany "1" *-- "0..*" Membership : has >
+    Membership "1" *-- "1" MemberType : typed as >
+    Membership "1" *-- "1" Position : has >
+    Membership "1" --> "1" Email : has >
+
+    SystemUser "1" *-- "1" FullName : has >
+    SystemUser "1" *-- "1" Email : has >
+    Email "1" *-- "1" Email_Domain : belongs to >
+    SystemUser "1" *-- "1" PhoneNumber : has >
+    SystemUser "1" *-- "1" Membership : has >
+
+    AirControlArea "1" *-- "0..*" Membership : has >
+    AirControlArea "1" *-- "1" AreaCode : has >
+
+    ' ── Repository manages the aggregate ───────────────────────────────
+    AirTransportCompanyRepository ..> AirTransportCompany : persists >
+    UserRepository ..> SystemUser : persists >
+    AirControlAreaRepository ..> AirControlArea : persists >
+
+    ' ── Architecture relationships ──────────────────────────────────────
+    ListCostumerCollaboratorsUI ..> ListCostumerCollaboratorsController : uses >
+    ListCostumerCollaboratorsController --> RepositoryFactory : uses >
+    ListCostumerCollaboratorsController ..> AirTransportCompanyRepository : uses >
+    ListCostumerCollaboratorsController ..> UserRepository : uses >
+    ListCostumerCollaboratorsController ..> AirControlAreaRepository : uses >
+}
+
+@enduml

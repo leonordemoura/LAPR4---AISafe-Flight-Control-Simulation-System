@@ -1,0 +1,124 @@
+@startuml
+' US085 – Validate flight plan (design)
+
+package "backoffice" {
+
+    package "app.console" {
+
+        class ValidateFlightPlanUI <<presentation>> {
+            - controller : ValidateFlightPlanController
+            + doShow() : boolean
+        }
+
+        class ValidateFlightPlanAction <<presentation>> {
+            + execute() : boolean
+        }
+    }
+}
+
+package "core" {
+
+    class ValidateFlightPlanController <<controller>> {
+        - service : ValidateFlightPlanService
+        + validateFlightPlan(flightId : FlightDesignator) : ValidateFlightPlanResult
+    }
+
+    class ValidateFlightPlanService <<service>> {
+        - flightRepository : FlightRepository
+        - aircraftRepository : AircraftRepository
+        - simulator : FlightPlanSimulator
+        + validate(flightId : FlightDesignator) : ValidateFlightPlanResult
+    }
+
+    class ValidateFlightPlanResult <<dto>> {
+        + isSuccess() : boolean
+    }
+
+    class FlightPlanDepartureConsistencyChecker <<helper>> {
+        + {static} mismatchMessage(...) : Optional<String>
+    }
+
+    class FlightPlanSimulator <<simulator>> {
+        + simulate(dslPlan, operationalFuel, aircraft) : boolean
+    }
+
+    class AircraftSimulationParametersResolver <<simulator>> {
+        + resolve(aircraft : Aircraft) : Optional<...>
+    }
+
+    class FlightValidationProfileCatalog <<catalog>> {
+        + climb() / descend() profiles
+    }
+
+    class FlightDslValidator <<dsl>> {
+        + {static} validate(dslSource : String) : ...
+    }
+
+    class Flight <<entity>> <<aggregateRoot>> {
+        + flightPlan() : FlightPlan
+        + markAsValidated() via plan
+    }
+
+    class FlightPlan <<entity>> {
+        + dslSource() : DslSource
+        + fuelQuantity() : FuelQuantity
+        + markAsValidated() : void
+        + isDraft() : boolean
+    }
+
+    class FlightDesignator <<vo>> {
+        airlineCode
+        flightNumber
+        operationalSuffix
+    }
+
+    enum FlightPlanStatus <<enum>> {
+        DRAFT
+        VALIDATED
+        CANCELLED
+    }
+
+    class Aircraft <<entity>> <<aggregateRoot>> {
+    }
+
+    interface FlightRepository <<repository>> {
+        + findByDesignator(designator) : Optional<Flight>
+        + save(flight) : Flight
+    }
+
+    interface AircraftRepository <<repository>> {
+        + findByRegistration(registration) : Optional<Aircraft>
+    }
+
+    ' Domain
+    Flight "1" *-- "1" FlightDesignator
+    Flight "1" *-- "0..1" FlightPlan
+    FlightPlan --> FlightPlanStatus
+
+    ' Repositories
+    FlightRepository ..> Flight : persists >
+    AircraftRepository ..> Aircraft : persists >
+
+    ' Architecture
+    ValidateFlightPlanAction ..> ValidateFlightPlanUI : opens >
+    ValidateFlightPlanUI ..> ValidateFlightPlanController : uses >
+
+    ValidateFlightPlanController ..> ValidateFlightPlanService : uses >
+    ValidateFlightPlanController ..> ValidateFlightPlanResult : returns >
+
+    ValidateFlightPlanService ..> FlightRepository : uses >
+    ValidateFlightPlanService ..> AircraftRepository : uses >
+    ValidateFlightPlanService ..> FlightDslValidator : validates DSL >
+    ValidateFlightPlanService ..> FlightPlanDepartureConsistencyChecker : checks departure >
+    ValidateFlightPlanService ..> AircraftSimulationParametersResolver : resolves params >
+    ValidateFlightPlanService ..> FlightPlanSimulator : fuel check >
+    ValidateFlightPlanService ..> Flight : loads >
+    ValidateFlightPlanService ..> FlightPlan : updates status >
+    ValidateFlightPlanService ..> ValidateFlightPlanResult : builds >
+
+    FlightPlanSimulator ..> FlightValidationProfileCatalog : uses >
+    FlightPlanSimulator ..> Aircraft : reads params >
+    AircraftSimulationParametersResolver ..> Aircraft : reads >
+}
+
+@enduml

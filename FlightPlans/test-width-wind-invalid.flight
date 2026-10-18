@@ -1,0 +1,31 @@
+flight TP123 {
+    type CHARTER
+
+    leg {
+        departure OPO 2026-06-12 08:00
+        arrival LIS 2026-06-12 09:00
+
+        route {
+            origin OPO
+            destination LIS
+        }
+
+        segment {
+            start (41.242, -8.678)
+            end (38.774, -9.134)
+            altitude 12000 m
+            width 0 km
+            wind 450 deg 10 kt
+        }
+
+        segment {
+            start (38.774, -9.134)
+            end (38.0, -9.0)
+            altitude 10000 m
+            width -5 km
+            wind 180 deg -5 kmh
+        }
+
+        fuel 5000 kg
+    }
+}

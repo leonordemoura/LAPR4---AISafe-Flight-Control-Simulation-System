@@ -1,0 +1,53 @@
+@startuml
+skinparam shadowing true
+hide footbox
+autonumber
+
+actor "Admin / Backoffice Operator" as Actor
+participant ":UserUI" as UI <<presentation>>
+participant ":UserController" as Ctrl <<application>>
+database ":UserRepository" as Repo <<persistence>>
+participant ":SystemUser" as Domain <<domain>>
+
+Actor -> UI : registerUser(firstName, lastName, emailAddress, phoneCode, phoneNumber)
+activate UI
+
+    UI -> Ctrl : registerNewUser(firstName, lastName, emailAddress, phoneCode, phoneNumber)
+    activate Ctrl
+
+        Ctrl -> Repo : existsByEmail(emailAddress)
+        activate Repo
+            Repo --> Ctrl : true / false
+        deactivate Repo
+
+        alt email is unique
+
+            Ctrl -> Domain : create(firstName, lastName, emailAddress, phoneCode, phoneNumber)
+            activate Domain
+
+                Domain -> Domain : validateEmailDomain(emailAddress)
+                note right of Domain
+                  **Enforced Invariant:**
+                  Email domain must be in
+                  authorized list
+                end note
+
+                Domain --> Ctrl : user
+            deactivate Domain
+
+            Ctrl -> Repo : save(user)
+            activate Repo
+                Repo --> Ctrl : success
+            deactivate Repo
+
+            Ctrl --> UI : success message
+
+        else email already exists
+            Ctrl --> UI : error "Email already in use"
+        end
+
+    deactivate Ctrl
+    UI --> Actor : display result
+deactivate UI
+
+@enduml
